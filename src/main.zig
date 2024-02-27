@@ -1,4 +1,4 @@
-const lexer = @import("src/lexer/lexer.zig");
+const lexer = @import("lexer/lexer.zig");
 const std = @import("std");
 
 pub fn main() !void {
