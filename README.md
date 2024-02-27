@@ -11,46 +11,26 @@ tabe of contents:
 
 ## Installation
 To start make sure you have the following installed:
-- [cmake](https://cmake.org/)
-- [make](https://www.gnu.org/software/make/)
-- [gcc](https://gcc.gnu.org/)
-- [gcc-multilib](https://packages.ubuntu.com/jammy/gcc-multilib)
-- [llvm](https://llvm.org/docs/GettingStarted.html)
+- [zig](https://ziglang.org/download/)
 
-Commands to install the above packages on Windows:
+For Nixos-Configuration:
 ```bash
-# Install chocolatey
-Set-ExecutionPolicy Bypass -Scope Process -Force; `
-  iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-
-# Install packages
-choco install cmake make mingw llvm
+environment.systemPackages = [
+    pkgs.zig
+  ];
 ```
 
-Commands to install the above packages on Ubuntu and Debian: 
+For Nixos-Shell:
 ```bash
-sudo apt install cmake make gcc gcc-multilib llvm
-```
-For Arch Linux:
-```bash
-sudo pacman -S cmake make gcc gcc-multilib llvm
+nix-shell -p zig
 ```
 
-Run the following commands if on Windows:
+Run the following commands:
 ```bash
-mkdir build
-cmake -S . -B build -G "MinGW Makefiles"
-cmake --build build
+zig build-exe src/main.zig --name zura
 ```
 
-Run the following commands if on Linux:
-```bash
-mkdir build
-cmake -S . -B build
-cmake --build build
-```
-
-This will create a `zura` executable in the `build` directory.
+This will create a `zura` executable in the `src` directory.
 
 Or you can download the latest release from [here](https://github.com/TheDevConnor/Zura-Transpiled/releases/tag/pre-release) and add either the `zura.exe` (For Windows) or `zura` (For Linux) executable to your path.
 Eventually, I will add a script to automate this process.
