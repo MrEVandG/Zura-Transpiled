@@ -9,16 +9,16 @@ const isAlpha = std.ascii.isAlphabetic;
 
 pub const Token = struct {
     type: TokenType,
-    line: c_int,
-    pos: c_int,
+    line: usize,
+    pos: usize,
 };
 
 const Scanner = struct {
     source: []const u8,
     start: []const u8,
     current: []const u8,
-    line: c_int,
-    pos: c_int,
+    line: usize,
+    pos: usize,
 };
 
 var scanner: Scanner = Scanner{ .source = "", .start = "", .current = "", .line = 1, .pos = 0 };
@@ -57,9 +57,9 @@ pub fn initScanner(source: []const u8) void {
     scanner.pos = 0;
 }
 
-pub fn lineStart(line: c_int) []const u8 {
+pub fn lineStart(line: usize) []const u8 {
     var start = scanner.source;
-    var currentLine: c_int = 1;
+    var currentLine: usize = 1;
     while (currentLine != line) {
         if (start[0] == '\n') {
             currentLine += 1;

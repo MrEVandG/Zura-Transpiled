@@ -13,7 +13,7 @@ fn printCharOrPlaceHolder(c: u8) void {
     }
 }
 
-pub fn lError(line: c_int, pos: c_int, _msg: []const u8) void {
+pub fn lError(line: usize, pos: usize, _msg: []const u8) void {
     comptime var cham = Chameleon.init(.Auto);
     print("[{}::{}] ", .{ line, pos });
     print(cham.red().fmt("error:"), .{});
