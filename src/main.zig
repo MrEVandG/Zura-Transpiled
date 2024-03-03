@@ -2,7 +2,7 @@ const lexer = @import("lexer/lexer.zig");
 const std = @import("std");
 
 pub fn main() !void {
-    const source: []const u8 = "//Hello World";
+    const source: []const u8 = "have x: int ` = 45;";
     lexer.initScanner(source);
 
     while (true) {

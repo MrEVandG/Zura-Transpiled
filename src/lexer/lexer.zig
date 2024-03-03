@@ -2,6 +2,7 @@ const print = @import("std").debug.print;
 const std = @import("std");
 
 pub const TokenType = @import("tokens.zig").TokenType;
+const lError = @import("../helper/error.zig").lError;
 
 const isDigit = std.ascii.isDigit;
 const isAlpha = std.ascii.isAlphabetic;
@@ -55,6 +56,18 @@ pub fn initScanner(source: []const u8) void {
     scanner.pos = 0;
 }
 
+pub fn lineStart(line: c_int) []const u8 {
+    var start = scanner.source;
+    var currentLine: c_int = 1;
+    while (currentLine != line) {
+        if (start[0] == '\n') {
+            currentLine += 1;
+        }
+        start = start[1..];
+    }
+    return start;
+}
+
 fn isAtEnd() bool {
     return scanner.current.len == 0;
 }
@@ -64,7 +77,7 @@ fn makeToken(kind: TokenType) Token {
 }
 
 fn errorToken(message: []const u8) Token {
-    print("Error: {s} \n", .{message});
+    lError(scanner.line, scanner.pos, message);
     return makeToken(TokenType.Error);
 }
 
@@ -127,25 +140,20 @@ fn skipWhitespace() void {
                 ' ', '\r', '\t' => {
                     _ = advance();
                 },
-
                 '\n' => {
                     scanner.line += 1;
                     scanner.pos = 0;
                     _ = advance();
                 },
-
                 '/' => {
                     if (peekNext() == '/') {
                         while (peek() != '\n' and !isAtEnd())
                             _ = advance();
                     } else return;
                 },
-
                 else => return,
             }
-        } else {
-            return;
-        }
+        } else return;
     }
 }
 
