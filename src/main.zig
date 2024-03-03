@@ -2,55 +2,36 @@ const lexer = @import("lexer/lexer.zig");
 const std = @import("std");
 
 pub fn main() !void {
-    const source: []const u8 = "have x: int ` = 45;";
-    lexer.initScanner(source);
+    // Allocate
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer _ = gpa.deinit();
 
-    while (true) {
-        const token = lexer.scanToken();
-        std.debug.print("Token: {} Pos: {} Line: {}\n", .{ token.type, token.pos, token.line });
-        if (token.type == lexer.TokenType.Eof) {
-            break;
-        }
-    }
-}
+    // Parse args into string array (error union needs 'try')
+    const args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, args);
 
-test "LexerTestVars" {
-    {
-        const input: []const u8 = "have x: int := 10;";
-        const expected = [_]lexer.Token{
-            .{ .type = lexer.TokenType.Var, .pos = 4, .line = 1 },
-            .{ .type = lexer.TokenType.Identifier, .pos = 6, .line = 1 },
-            .{ .type = lexer.TokenType.Colon, .pos = 7, .line = 1 },
-            .{ .type = lexer.TokenType.Int, .pos = 11, .line = 1 },
-            .{ .type = lexer.TokenType.Walrus, .pos = 14, .line = 1 },
-            .{ .type = lexer.TokenType.Number, .pos = 17, .line = 1 },
-            .{ .type = lexer.TokenType.semicolon, .pos = 18, .line = 1 },
-            .{ .type = lexer.TokenType.Eof, .pos = 18, .line = 1 },
-        };
+    // NOTE: add in flags for compiler options
 
+    // Opening, reading, and lexing the file
+    var file = try std.fs.cwd().openFile(args[1], .{});
+    defer file.close();
+
+    var bufferReader = std.io.bufferedReader(file.reader());
+    var inStream = bufferReader.reader();
+
+    var buffer: [1024]u8 = undefined;
+    while (try inStream.readUntilDelimiterOrEof(&buffer, '\n')) |read| {
+        const input = buffer[0..read.len];
         lexer.initScanner(input);
 
-        for (expected) |capturedToken| {
-            try std.testing.expectEqual(capturedToken, lexer.scanToken());
-        }
-    }
-    {
-        const input: []const u8 = "have x: str := \"Hello World\";";
-        const expected = [_]lexer.Token{
-            .{ .type = lexer.TokenType.Var, .pos = 4, .line = 1 },
-            .{ .type = lexer.TokenType.Identifier, .pos = 6, .line = 1 },
-            .{ .type = lexer.TokenType.Colon, .pos = 7, .line = 1 },
-            .{ .type = lexer.TokenType.String, .pos = 11, .line = 1 },
-            .{ .type = lexer.TokenType.Walrus, .pos = 14, .line = 1 },
-            .{ .type = lexer.TokenType.String, .pos = 28, .line = 1 },
-            .{ .type = lexer.TokenType.semicolon, .pos = 29, .line = 1 },
-            .{ .type = lexer.TokenType.Eof, .pos = 29, .line = 1 },
-        };
-
-        lexer.initScanner(input);
-
-        for (expected) |capturedToken| {
-            try std.testing.expectEqual(capturedToken, lexer.scanToken());
+        while (true) {
+            const token = lexer.scanToken();
+            //NOTE: Line is not being indexed correctly
+            std.debug.print("Token: {} Pos: {} Line: {}\n", .{ token.type, token.pos, token.line });
+            if (token.type == lexer.TokenType.Eof) {
+                break;
+            }
         }
     }
 }

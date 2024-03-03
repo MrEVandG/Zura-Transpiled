@@ -1,3 +1,2 @@
-fn main() int {
-  print("Hello World\n", .{});    
-}
+have x: int = 1;
+have y: int = 2;

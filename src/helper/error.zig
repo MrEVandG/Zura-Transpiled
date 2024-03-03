@@ -27,9 +27,7 @@ pub fn lError(line: c_int, pos: c_int, _msg: []const u8) void {
 
     // print out the pointer to the error
     var i: usize = 0;
-    while (i < (pos - 1)) {
+    while (i < (pos - 1)) : (i += 1)
         printCharOrPlaceHolder(start[i]);
-        i += 1;
-    }
     print("^\n", .{});
 }

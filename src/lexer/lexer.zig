@@ -31,6 +31,7 @@ fn advance() ?u8 {
     const result = scanner.current[0];
     scanner.current = scanner.current[1..];
     scanner.pos += 1;
+
     return result;
 }
 
