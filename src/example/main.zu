@@ -1,2 +1,1 @@
-have x: int = 1;
-have y: int = 2;
+have y: int ~ = 2;
