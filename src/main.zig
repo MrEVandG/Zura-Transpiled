@@ -1,20 +1,9 @@
 const lexer = @import("lexer/lexer.zig");
 const std = @import("std");
 
-pub fn main() !void {
-    // Allocate
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer _ = gpa.deinit();
-
-    // Parse args into string array (error union needs 'try')
-    const args = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, args);
-
-    // NOTE: add in flags for compiler options
-
+fn run(cmd: [][]u8) !void {
     // Opening, reading, and lexing the file
-    var file = try std.fs.cwd().openFile(args[1], .{});
+    var file = try std.fs.cwd().openFile(cmd[2], .{});
     defer file.close();
 
     var bufferReader = std.io.bufferedReader(file.reader());
@@ -33,5 +22,35 @@ pub fn main() !void {
                 break;
             }
         }
+    }
+
+    std.os.exit(0);
+}
+
+fn checkForCompilerCmd(args: [][]u8) !usize {
+    for (args, 0..) |arg, index| {
+        if (std.mem.eql(u8, "build", arg) or std.mem.eql(u8, "run", arg)) {
+            try run(args);
+            return index;
+        }
+    }
+    return 1;
+}
+
+pub fn main() !void {
+    // Allocate
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer _ = gpa.deinit();
+
+    // Parse args into string array (error union needs 'try')
+    const args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, args);
+
+    // Check for compiler command
+    const compilerCmdIndex = try checkForCompilerCmd(args);
+    if (compilerCmdIndex == 1) {
+        std.debug.print("No compiler command found\n", .{});
+        return;
     }
 }
