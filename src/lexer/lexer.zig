@@ -7,7 +7,7 @@ const lError = @import("../helper/error.zig").lError;
 const isDigit = std.ascii.isDigit;
 const isAlpha = std.ascii.isAlphabetic;
 
-pub const Token = struct {
+const Token = struct {
     type: TokenType,
     line: usize,
     pos: usize,
@@ -22,8 +22,9 @@ const Scanner = struct {
 };
 
 var scanner: Scanner = Scanner{ .source = "", .start = "", .current = "", .line = 1, .pos = 0 };
+pub var token = Token{ .type = TokenType.Start, .line = 1, .pos = 0 };
 
-fn advance() ?u8 {
+pub fn advance() ?u8 {
     if (isAtEnd()) {
         return null;
     }
@@ -74,7 +75,10 @@ fn isAtEnd() bool {
 }
 
 fn makeToken(kind: TokenType) Token {
-    return Token{ .type = kind, .line = scanner.line, .pos = scanner.pos };
+    token.type = kind;
+    token.line = scanner.line;
+    token.pos = scanner.pos;
+    return token;
 }
 
 fn errorToken(message: []const u8) Token {
@@ -168,7 +172,7 @@ fn dLookUp(_string: [2]u8) ?TokenType {
     return doubleCharLookup.get(&_string);
 }
 
-pub fn scanToken() Token {
+pub fn scanTokens() Token {
     skipWhitespace();
 
     scanner.start = scanner.current;
@@ -201,7 +205,7 @@ pub fn scanToken() Token {
             '+' => makeToken(TokenType.plus),
             '*' => makeToken(TokenType.star),
             '/' => makeToken(TokenType.slash),
-            '^' => makeToken(TokenType.carrot),
+            '^' => makeToken(TokenType.caret),
             '%' => makeToken(TokenType.mod),
             '-' => makeToken(TokenType.minus),
             '!' => makeToken(TokenType.not),

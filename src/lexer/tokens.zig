@@ -19,7 +19,7 @@ pub const TokenType = enum {
     plus,
     star,
     slash,
-    carrot,
+    caret,
     mod,
 
     // Unary operators
@@ -52,5 +52,6 @@ pub const TokenType = enum {
 
     // Error and end of file
     Error,
+    Start,
     Eof,
 };

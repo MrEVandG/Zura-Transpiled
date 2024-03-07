@@ -1,4 +1,5 @@
 const lexer = @import("lexer/lexer.zig");
+const parser = @import("parser/parser.zig");
 const std = @import("std");
 
 fn run(cmd: [][]u8) !void {
@@ -12,16 +13,12 @@ fn run(cmd: [][]u8) !void {
     var buffer: [1024]u8 = undefined;
     while (try inStream.readUntilDelimiterOrEof(&buffer, '\n')) |read| {
         const input = buffer[0..read.len];
+
         lexer.initScanner(input);
 
-        while (true) {
-            const token = lexer.scanToken();
-            //NOTE: Line is not being indexed correctly
-            std.debug.print("Token: {} Pos: {} Line: {}\n", .{ token.type, token.pos, token.line });
-            if (token.type == lexer.TokenType.Eof) {
-                break;
-            }
-        }
+        var result = parser.parse();
+
+        std.debug.print("result: {any}\n", .{result});
     }
 
     std.os.exit(0);
