@@ -1,6 +1,7 @@
 const tokens = @import("../lexer/lexer.zig");
 const perror = @import("../helper/error.zig").pError;
 const TokenType = @import("../lexer/tokens.zig").TokenType;
+const AstNode = @import("../ast/ast.zig");
 const std = @import("std");
 
 pub const Precedence = struct {

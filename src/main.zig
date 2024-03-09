@@ -30,6 +30,10 @@ fn checkForCompilerCmd(args: [][]u8) !usize {
             try run(args);
             return index;
         }
+        if (std.mem.eql(u8, "-v", arg)) {
+            std.debug.print("Zura version 0.1.0\n", .{});
+            return index;
+        }
     }
     return 1;
 }
@@ -56,6 +60,9 @@ pub fn main() !void {
         std.debug.print("    -name => assigns a name to the exacutable\n", .{});
         std.debug.print("    -save => saves the exacutable to a given path\n", .{});
         std.debug.print("    -sAll => saves the .o and exacutable files\n", .{});
+        std.debug.print("    -c    => delets the exacutable generated and the .o file\n", .{});
+        std.debug.print("Helpful commands:\n", .{});
+        std.debug.print("    -v    => prints the version of the compiler\n", .{});
         return;
     }
 }

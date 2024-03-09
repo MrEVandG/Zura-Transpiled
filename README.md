@@ -37,17 +37,27 @@ Eventually, I will add a script to automate this process.
 
 ## Usage
 ```bash
-./build/zura <filename> -o <output name>
+zura [build || run] <filename.zu>
 ```
 
-if you wish to save the c code to a file, use the `-s` flag:
+Change the output name of the exacutable:
 ```bash
-./build/zura <filename> -o <output name> -s
+zura [build || run] <filename.zu> -name <output name>
+```
+
+Save the exacutable to a given path:
+```bash
+zura [build || run] <filename.zu> -s <path>
+```
+
+if you wish to save the asm code to a file, use the `-sAll` flag:
+```bash
+zura [build || run] <filename.zu> -s
 ```
 
 if you want to clean up the build directory, use the `-c` flag:
 ```bash
-./build/zura -c <exactable name>
+zura -c <exactable name>
 ```
 
 Then run the output file with:
@@ -60,6 +70,6 @@ not yet down
 
 ## Command that you can run
 ```bash 
-zura --help
+zura -v
 ```
 This command will show you all of the commands that you can run in the zura compiler.
