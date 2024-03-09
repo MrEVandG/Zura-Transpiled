@@ -48,6 +48,14 @@ pub fn main() !void {
     const compilerCmdIndex = try checkForCompilerCmd(args);
     if (compilerCmdIndex == 1) {
         std.debug.print("No compiler command found\n", .{});
+        std.debug.print("Usage: zura [build|run] <file.zu> [args...]\n", .{});
+        std.debug.print("Compiler commands:\n", .{});
+        std.debug.print("    build => builds the given file to an exacutable\n", .{});
+        std.debug.print("    run   => builds and runs the given file\n", .{});
+        std.debug.print("Args commands:\n", .{});
+        std.debug.print("    -name => assigns a name to the exacutable\n", .{});
+        std.debug.print("    -save => saves the exacutable to a given path\n", .{});
+        std.debug.print("    -sAll => saves the .o and exacutable files\n", .{});
         return;
     }
 }
