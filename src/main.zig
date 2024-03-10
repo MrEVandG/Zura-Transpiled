@@ -25,14 +25,14 @@ fn run(cmd: [][]u8) !void {
 }
 
 fn checkForCompilerCmd(args: [][]u8) !usize {
-    for (args, 0..) |arg, index| {
+    for (args) |arg| {
         if (std.mem.eql(u8, "build", arg) or std.mem.eql(u8, "run", arg)) {
             try run(args);
-            return index;
+            return 0;
         }
         if (std.mem.eql(u8, "-v", arg)) {
             std.debug.print("Zura version 0.1.0\n", .{});
-            return index;
+            return 0;
         }
     }
     return 1;
