@@ -1,0 +1,14 @@
+fn main() -> !void {
+  auto x := [*]i8{1, 2, 4, 5}; // dynamic array because the size is not known at compile time 
+
+  x <- 0; // this pops the zero index off of the array [2, 4, 5]
+  info "%a", .{x}; // prints [2, 4, 5]
+
+  x -> 10 @ 3; // this sets the 3rd index to 10 [2, 4, 5, 10]
+  info "%a", .{x}; // prints [2, 4, 5, 10]
+
+  have z: [i8, 4] = {1, 2, 3, 4}; // static array because the size is known at compile time
+  info "%a", .{z[2]}; // index z at index 2 for value of 3 //NOTE: strings can also be indexed
+
+  ret 0;
+}

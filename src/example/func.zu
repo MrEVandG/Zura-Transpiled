@@ -1,0 +1,9 @@
+// Make a function that adds to numbers together
+fn add(a: i8, b: i8) -> i16 {
+    ret a + b;
+}
+
+fn main() -> !void {
+    info "result: %i", .{add(1, 2)};
+    ret 0;
+}

@@ -1,0 +1,32 @@
+fn main() -> !void {
+  auto x := 10;
+  if (x > 5 and x < 5) info "x is greater than 5 and less than 5", .{};
+  else info "x is not greater than 5 and less than 5", .{};
+
+  ret 0;
+}
+
+// Tunary Operation
+fn main() -> !void {
+  auto z := (10 > 5) ? 10 : 5;
+  info "%i\n", .{z};
+  ret 0;
+}
+
+// Switch Statement
+fn math(op: char, a: int, b: int) -> int {
+  switch(op) {
+    '+' => ret a + b;
+    '-' => ret a - b;
+    '*' => ret a * b;
+    '/' => ret a / b;
+    _ => ret 0;
+  }
+}
+
+fn main() -> !void {
+  auto x := (math('+', 10, 5) == 0) ? "Operation not found"
+                                    : math('+', 10, 5);
+  info "%a\n", .{x};
+  ret 0;
+}

@@ -1,0 +1,30 @@
+//Data Types be default
+i8 
+i16
+i32
+i64
+int // all of them
+
+u8
+u16
+u32
+u64
+uint // all of them 
+
+fl32 // 32 bits float
+fl64 // 64 bits float
+
+string
+char
+bool
+
+// Mutable var declaration
+var x: int = 25;
+or
+have x: int = 25;
+
+// inmutable var declaration
+const y: int = 30;
+
+// auto type
+auto z := "Hello World!";

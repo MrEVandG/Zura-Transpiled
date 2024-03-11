@@ -1,0 +1,28 @@
+//while loop
+fn main() -> !void {
+  loop (true) {
+    info "Hello, World!";
+  }
+  ret 0;
+}
+
+// While loop with optional condition
+fn main() -> !void {
+  have running: bool = true;
+  auto i := 0;
+
+  loop (running) : (i++) {
+    if (i == 10) 
+      running = false;
+    info "Hello, World!";
+  }
+  ret 0;
+}
+
+// For loop
+fn main() -> !void {
+  loop (auto i := 0; i < 10) : (i++) {
+    info "Hello, World!";
+  }
+  ret 0;
+}
