@@ -14,7 +14,7 @@ fn main() -> !void {
 }
 
 // Switch Statement
-fn math(op: char, a: int, b: int) -> int {
+fn math(op: char, a: i8, b: i32) -> int {
   switch(op) {
     '+' => ret a + b;
     '-' => ret a - b;

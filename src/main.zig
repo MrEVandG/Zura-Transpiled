@@ -1,5 +1,4 @@
 const lexer = @import("lexer/lexer.zig");
-const parser = @import("parser/parser.zig");
 const std = @import("std");
 
 fn run(cmd: [][]u8) !void {
@@ -14,11 +13,16 @@ fn run(cmd: [][]u8) !void {
     while (try inStream.readUntilDelimiterOrEof(&buffer, '\n')) |read| {
         const input = buffer[0..read.len];
 
+        // NOTE: The line does not inrement when there is a new line number.
+        // The problem is because we can not check true on the \n character.
         lexer.initScanner(input);
-
-        var result = parser.parse();
-
-        std.debug.print("result: {any}\n", .{result});
+        while (true) {
+            const token = lexer.scanToken();
+            std.debug.print("{any} \n", .{token.type});
+            if (token.type == lexer.tokens.TokenType.Eof) {
+                break;
+            }
+        }
     }
 
     std.os.exit(0);

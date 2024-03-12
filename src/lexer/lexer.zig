@@ -1,160 +1,119 @@
-const print = @import("std").debug.print;
 const std = @import("std");
 
-pub const TokenType = @import("tokens.zig").TokenType;
-const lError = @import("../helper/error.zig").lError;
+pub const tokens = @import("tokens.zig");
+
+const Token = @import("tokens.zig").Token;
+const lError = @import("../helper/error.zig");
 
 const isDigit = std.ascii.isDigit;
-const isAlpha = std.ascii.isAlphabetic;
-
-const Token = struct {
-    type: TokenType,
-    line: usize,
-    pos: usize,
-};
-
-const Scanner = struct {
-    source: []const u8,
-    start: []const u8,
-    current: []const u8,
-    line: usize,
-    pos: usize,
-};
-
-var scanner: Scanner = Scanner{ .source = "", .start = "", .current = "", .line = 1, .pos = 0 };
-pub var token = Token{ .type = TokenType.Start, .line = 1, .pos = 0 };
-
-pub fn advance() ?u8 {
-    if (isAtEnd()) {
-        return null;
-    }
-
-    const result = scanner.current[0];
-    scanner.current = scanner.current[1..];
-    scanner.pos += 1;
-
-    return result;
-}
-
-fn peek() ?u8 {
-    if (isAtEnd()) {
-        return null;
-    }
-    return scanner.current[0];
-}
-
-fn peekNext() ?u8 {
-    if (scanner.current.len > 1) {
-        return scanner.current[1];
-    }
-    return null;
-}
+const isAplha = std.ascii.isAlphabetic;
 
 pub fn initScanner(source: []const u8) void {
-    scanner.source = source;
-    scanner.start = source;
-    scanner.current = source;
-    scanner.line = 1;
-    scanner.pos = 0;
+    tokens.scanner.current = source;
+    tokens.scanner.source = source;
+    tokens.scanner.start = source;
+    tokens.scanner.line = 1;
+    tokens.scanner.pos = 0;
 }
 
 pub fn lineStart(line: usize) []const u8 {
-    var start = scanner.source;
-    var currentLine: usize = 1;
-    while (currentLine != line) {
-        if (start[0] == '\n') {
-            currentLine += 1;
-        }
+    var start = tokens.scanner.source;
+    var cLine: usize = 1;
+
+    while (cLine != line) {
+        if (start[0] == '\n')
+            cLine += 1;
         start = start[1..];
     }
     return start;
 }
 
-fn isAtEnd() bool {
-    return scanner.current.len == 0;
-}
-
-fn makeToken(kind: TokenType) Token {
-    token.type = kind;
-    token.line = scanner.line;
-    token.pos = scanner.pos;
-    return token;
+fn makeToken(kind: tokens.TokenType) Token {
+    tokens.token.line = tokens.scanner.line;
+    tokens.token.pos = tokens.scanner.pos;
+    tokens.token.type = kind;
+    return tokens.token;
 }
 
 fn errorToken(message: []const u8) Token {
-    lError(scanner.line, scanner.pos, message);
-    return makeToken(TokenType.Error);
+    lError.lError(tokens.scanner.line, tokens.scanner.pos, message);
+    return makeToken(tokens.TokenType.Error);
+}
+
+fn isEof() bool {
+    return tokens.scanner.current.len == 0;
+}
+
+fn advance() ?u8 {
+    if (isEof()) return null;
+    const result = tokens.scanner.current[0];
+    tokens.scanner.current = tokens.scanner.current[1..];
+    tokens.scanner.pos += 1;
+    return result;
+}
+
+fn peek(index: usize) ?u8 {
+    if (index > tokens.scanner.current.len) return null;
+    return tokens.scanner.current[index];
 }
 
 fn num() Token {
-    while (isDigit(peek() orelse '*')) {
+    while (isDigit(peek(0) orelse 0))
         _ = advance();
+    if (peek(0) == '.' and isDigit(peek(1) orelse 0)) {
+        _ = advance();
+        while (isDigit(peek(0) orelse 0))
+            _ = advance();
     }
-    return makeToken(TokenType.Number);
+    return makeToken(tokens.TokenType.Num);
 }
 
 fn string() Token {
-    while (peek() != '"' and !isAtEnd()) {
-        if (peek() == '\n') {
-            scanner.line += 1;
-        }
+    while (peek(0) != '"' and !isEof()) {
+        if (peek(0) == '\n') tokens.scanner.line += 1;
         _ = advance();
     }
-    if (isAtEnd()) {
-        return errorToken("Unterminated string.");
-    }
+    if (isEof()) return errorToken("Unterminated string.");
     _ = advance();
-    return makeToken(TokenType.String);
+    return makeToken(tokens.TokenType.String);
 }
 
-fn getTokenKind(identifier: []const u8) TokenType {
-    const keywords = std.ComptimeStringMap(TokenType, .{
-        .{ "have", TokenType.Var },
-        .{ "fn", TokenType.Fn },
-        .{ "if", TokenType.If },
-        .{ "else", TokenType.Else },
-        .{ "int", TokenType.Int },
-        .{ "float", TokenType.Float },
-        .{ "str", TokenType.String },
-        .{ "bool", TokenType.Bool },
-        .{ "null", TokenType.NUll },
+fn getTokenType(keyword: []const u8) tokens.TokenType {
+    const hash = std.ComptimeStringMap(tokens.TokenType, .{
+        .{ "fn", tokens.TokenType.Func },
+        .{ "ret", tokens.TokenType.Return },
+        .{ "info", tokens.TokenType.Info },
+        .{ "have", tokens.TokenType.Have },
+        .{ "const", tokens.TokenType.Const },
+        .{ "auto", tokens.TokenType.Auto },
+        .{ "if", tokens.TokenType.If },
+        .{ "else", tokens.TokenType.Else },
     });
-    return keywords.get(identifier) orelse TokenType.Identifier;
+    return hash.get(keyword) orelse tokens.TokenType.Ident;
 }
 
-fn identType() TokenType {
-    const keyword = scanner.start[0 .. scanner.start.len - scanner.current.len];
-    return getTokenKind(keyword);
+fn identType() tokens.TokenType {
+    const keyword = tokens.scanner.start[0 .. tokens.scanner.start.len - tokens.scanner.current.len];
+    return getTokenType(keyword);
 }
 
 fn ident() Token {
-    while (true) {
-        if (peek()) |c| {
-            if (isAlpha(c) or isDigit(c)) {
-                _ = advance();
-            } else break;
-        } else break;
-    }
+    while (isAplha(peek(0) orelse 0) or isDigit(peek(0) orelse 0))
+        _ = advance();
     return makeToken(identType());
 }
 
-fn skipWhitespace() void {
+fn skipWhiteSpace() void {
     while (true) {
-        if (peek()) |c| {
+        if (peek(0)) |c| {
             switch (c) {
-                ' ', '\r', '\t' => {
+                ' ', '\t', '\r' => {
                     _ = advance();
                 },
-                '\n' => {
-                    scanner.line += 1;
-                    scanner.pos = 0;
-                    _ = advance();
-                },
-                '/' => {
-                    if (peekNext() == '/') {
-                        while (peek() != '\n' and !isAtEnd())
-                            _ = advance();
-                    } else return;
+                '#' => {
+                    while (peek(0) != '\n' and !isEof()) _ = advance();
+                    tokens.scanner.line += 1;
+                    std.debug.print("line {}\n", .{tokens.scanner.line});
                 },
                 else => return,
             }
@@ -162,60 +121,58 @@ fn skipWhitespace() void {
     }
 }
 
-fn dLookUp(_string: [2]u8) ?TokenType {
-    const doubleCharLookup = std.ComptimeStringMap(TokenType, .{
-        .{ "==", TokenType.equalEqual },
-        .{ "<=", TokenType.lessEqual },
-        .{ ">=", TokenType.greaterEqual },
-        .{ ":=", TokenType.Walrus },
+fn dCharLookUp(dchar: [2]u8) ?tokens.TokenType {
+    const hash = std.ComptimeStringMap(tokens.TokenType, .{
+        .{ "==", tokens.TokenType.eEqual },
+        .{ "!=", tokens.TokenType.nEqual },
+        .{ "<=", tokens.TokenType.ltEqual },
+        .{ ">=", tokens.TokenType.gtEqual },
+        .{ ":=", tokens.TokenType.Walrus },
+        .{ "->", tokens.TokenType.lArrow },
+        .{ "<-", tokens.TokenType.rArrow },
     });
-    return doubleCharLookup.get(&_string);
+    return hash.get(&dchar);
 }
 
-pub fn scanTokens() Token {
-    skipWhitespace();
+pub fn scanToken() Token {
+    skipWhiteSpace();
 
-    scanner.start = scanner.current;
+    tokens.scanner.start = tokens.scanner.current;
 
     if (advance()) |c| {
-        if (isAlpha(c))
-            return ident();
+        if (isAplha(c)) return ident();
+        if (isDigit(c)) return num();
 
-        if (isDigit(c))
-            return num();
-
-        if (peek()) |c2| {
-            var dCharLookUp = [2]u8{ c, c2 };
-            if (dLookUp(dCharLookUp)) |it| {
+        if (peek(0)) |c2| {
+            var dChar = [2]u8{ c, c2 };
+            if (dCharLookUp(dChar)) |it| {
                 _ = advance();
                 return makeToken(it);
             }
         }
 
         return switch (c) {
-            ')' => makeToken(TokenType.rParen),
-            '(' => makeToken(TokenType.lParen),
-            '}' => makeToken(TokenType.rCurly),
-            '{' => makeToken(TokenType.lCurly),
-            ']' => makeToken(TokenType.rBrace),
-            '[' => makeToken(TokenType.lBrace),
-            ';' => makeToken(TokenType.semicolon),
-            ',' => makeToken(TokenType.comma),
-            '.' => makeToken(TokenType.dot),
-            '+' => makeToken(TokenType.plus),
-            '*' => makeToken(TokenType.star),
-            '/' => makeToken(TokenType.slash),
-            '^' => makeToken(TokenType.caret),
-            '%' => makeToken(TokenType.mod),
-            '-' => makeToken(TokenType.minus),
-            '!' => makeToken(TokenType.not),
-            '=' => makeToken(TokenType.equal),
-            '<' => makeToken(TokenType.less),
-            '>' => makeToken(TokenType.greater),
-            ':' => makeToken(TokenType.Colon),
+            '(' => makeToken(tokens.TokenType.lParen),
+            ')' => makeToken(tokens.TokenType.rParen),
+            '{' => makeToken(tokens.TokenType.lBrace),
+            '}' => makeToken(tokens.TokenType.rBrace),
+            '[' => makeToken(tokens.TokenType.lBrac),
+            ']' => makeToken(tokens.TokenType.rBrac),
+            ',' => makeToken(tokens.TokenType.comma),
+            '-' => makeToken(tokens.TokenType.minus),
+            '+' => makeToken(tokens.TokenType.plus),
+            '/' => makeToken(tokens.TokenType.slash),
+            '*' => makeToken(tokens.TokenType.star),
+            '%' => makeToken(tokens.TokenType.mod),
+            '^' => makeToken(tokens.TokenType.caret),
+            '!' => makeToken(tokens.TokenType.not),
+            ';' => makeToken(tokens.TokenType.semicolon),
+            ':' => makeToken(tokens.TokenType.colon),
+            '=' => makeToken(tokens.TokenType.equal),
+            '.' => makeToken(tokens.TokenType.dot),
             '"' => string(),
-            else => return errorToken("Unexpected character."),
+            else => errorToken("Unexpected character."),
         };
     }
-    return makeToken(TokenType.Eof);
+    return makeToken(tokens.TokenType.Eof);
 }
