@@ -1,27 +1,25 @@
 const lexer = @import("lexer/lexer.zig");
 const std = @import("std");
 
+fn getFileContents(file: std.fs.File) ![]const u8 {
+    var allocator = std.heap.page_allocator;
+    var buffer: usize = 1024;
+    var result = try file.readToEndAlloc(allocator, buffer);
+    return result;
+}
+
 fn run(cmd: [][]u8) !void {
     // Opening, reading, and lexing the file
     var file = try std.fs.cwd().openFile(cmd[2], .{});
-    defer file.close();
+    var input: []const u8 = try getFileContents(file);
 
-    var bufferReader = std.io.bufferedReader(file.reader());
-    var inStream = bufferReader.reader();
+    lexer.initScanner(input);
 
-    var buffer: [1024]u8 = undefined;
-    while (try inStream.readUntilDelimiterOrEof(&buffer, '\n')) |read| {
-        const input = buffer[0..read.len];
-
-        // NOTE: The line does not inrement when there is a new line number.
-        // The problem is because we can not check true on the \n character.
-        lexer.initScanner(input);
-        while (true) {
-            const token = lexer.scanToken();
-            std.debug.print("{any} \n", .{token.type});
-            if (token.type == lexer.tokens.TokenType.Eof) {
-                break;
-            }
+    while (true) {
+        const token = lexer.scanToken();
+        std.debug.print("{} \n", .{token.type});
+        if (token.type == .Eof) {
+            break;
         }
     }
 

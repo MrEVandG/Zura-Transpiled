@@ -36,7 +36,7 @@ fn makeToken(kind: tokens.TokenType) Token {
 }
 
 fn errorToken(message: []const u8) Token {
-    lError.lError(tokens.scanner.line, tokens.scanner.pos, message);
+    lError.lError(tokens.scanner.line, tokens.scanner.pos - 1, message);
     return makeToken(tokens.TokenType.Error);
 }
 
@@ -53,43 +53,45 @@ fn advance() ?u8 {
 }
 
 fn peek(index: usize) ?u8 {
-    if (index > tokens.scanner.current.len) return null;
+    if (index >= tokens.scanner.current.len) return null;
     return tokens.scanner.current[index];
 }
 
 fn num() Token {
-    while (isDigit(peek(0) orelse 0))
-        _ = advance();
+    while (isDigit(peek(0) orelse 0)) _ = advance();
     if (peek(0) == '.' and isDigit(peek(1) orelse 0)) {
         _ = advance();
         while (isDigit(peek(0) orelse 0))
             _ = advance();
     }
-    return makeToken(tokens.TokenType.Num);
+    return makeToken(.Num);
 }
 
 fn string() Token {
     while (peek(0) != '"' and !isEof()) {
-        if (peek(0) == '\n') tokens.scanner.line += 1;
+        if (peek(0) == '\n') {
+            tokens.scanner.line += 1;
+            tokens.scanner.pos = 0;
+        }
         _ = advance();
     }
     if (isEof()) return errorToken("Unterminated string.");
     _ = advance();
-    return makeToken(tokens.TokenType.String);
+    return makeToken(.String);
 }
 
 fn getTokenType(keyword: []const u8) tokens.TokenType {
     const hash = std.ComptimeStringMap(tokens.TokenType, .{
-        .{ "fn", tokens.TokenType.Func },
-        .{ "ret", tokens.TokenType.Return },
-        .{ "info", tokens.TokenType.Info },
-        .{ "have", tokens.TokenType.Have },
-        .{ "const", tokens.TokenType.Const },
-        .{ "auto", tokens.TokenType.Auto },
-        .{ "if", tokens.TokenType.If },
-        .{ "else", tokens.TokenType.Else },
+        .{ "fn", .Func },
+        .{ "ret", .Return },
+        .{ "info", .Info },
+        .{ "have", .Have },
+        .{ "const", .Const },
+        .{ "auto", .Auto },
+        .{ "if", .If },
+        .{ "else", .Else },
     });
-    return hash.get(keyword) orelse tokens.TokenType.Ident;
+    return hash.get(keyword) orelse .Ident;
 }
 
 fn identType() tokens.TokenType {
@@ -110,10 +112,13 @@ fn skipWhiteSpace() void {
                 ' ', '\t', '\r' => {
                     _ = advance();
                 },
+                '\n' => {
+                    tokens.scanner.line += 1;
+                    tokens.scanner.pos = 0;
+                    _ = advance();
+                },
                 '#' => {
                     while (peek(0) != '\n' and !isEof()) _ = advance();
-                    tokens.scanner.line += 1;
-                    std.debug.print("line {}\n", .{tokens.scanner.line});
                 },
                 else => return,
             }
@@ -123,13 +128,13 @@ fn skipWhiteSpace() void {
 
 fn dCharLookUp(dchar: [2]u8) ?tokens.TokenType {
     const hash = std.ComptimeStringMap(tokens.TokenType, .{
-        .{ "==", tokens.TokenType.eEqual },
-        .{ "!=", tokens.TokenType.nEqual },
-        .{ "<=", tokens.TokenType.ltEqual },
-        .{ ">=", tokens.TokenType.gtEqual },
-        .{ ":=", tokens.TokenType.Walrus },
-        .{ "->", tokens.TokenType.lArrow },
-        .{ "<-", tokens.TokenType.rArrow },
+        .{ "==", .eEqual },
+        .{ "!=", .nEqual },
+        .{ "<=", .ltEqual },
+        .{ ">=", .gtEqual },
+        .{ ":=", .Walrus },
+        .{ "->", .lArrow },
+        .{ "<-", .rArrow },
     });
     return hash.get(&dchar);
 }
@@ -152,27 +157,27 @@ pub fn scanToken() Token {
         }
 
         return switch (c) {
-            '(' => makeToken(tokens.TokenType.lParen),
-            ')' => makeToken(tokens.TokenType.rParen),
-            '{' => makeToken(tokens.TokenType.lBrace),
-            '}' => makeToken(tokens.TokenType.rBrace),
-            '[' => makeToken(tokens.TokenType.lBrac),
-            ']' => makeToken(tokens.TokenType.rBrac),
-            ',' => makeToken(tokens.TokenType.comma),
-            '-' => makeToken(tokens.TokenType.minus),
-            '+' => makeToken(tokens.TokenType.plus),
-            '/' => makeToken(tokens.TokenType.slash),
-            '*' => makeToken(tokens.TokenType.star),
-            '%' => makeToken(tokens.TokenType.mod),
-            '^' => makeToken(tokens.TokenType.caret),
-            '!' => makeToken(tokens.TokenType.not),
-            ';' => makeToken(tokens.TokenType.semicolon),
-            ':' => makeToken(tokens.TokenType.colon),
-            '=' => makeToken(tokens.TokenType.equal),
-            '.' => makeToken(tokens.TokenType.dot),
+            '(' => makeToken(.lParen),
+            ')' => makeToken(.rParen),
+            '{' => makeToken(.lBrace),
+            '}' => makeToken(.rBrace),
+            '[' => makeToken(.lBrac),
+            ']' => makeToken(.rBrac),
+            ',' => makeToken(.comma),
+            '-' => makeToken(.minus),
+            '+' => makeToken(.plus),
+            '/' => makeToken(.slash),
+            '*' => makeToken(.star),
+            '%' => makeToken(.mod),
+            '^' => makeToken(.caret),
+            '!' => makeToken(.not),
+            ';' => makeToken(.semicolon),
+            ':' => makeToken(.colon),
+            '=' => makeToken(.equal),
+            '.' => makeToken(.dot),
             '"' => string(),
             else => errorToken("Unexpected character."),
         };
     }
-    return makeToken(tokens.TokenType.Eof);
+    return makeToken(.Eof);
 }

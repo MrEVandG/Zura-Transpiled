@@ -4,7 +4,7 @@ fn add(a: i8, b: i8) -> i16 {
 }
 
 fn main() -> !void {
-    info "result: %i", .{add(1, 2)};
+    info "result: %i", .{add(1, 2)} ~;
     ret 0;
 }
 
