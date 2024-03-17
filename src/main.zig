@@ -1,35 +1,39 @@
 const lexer = @import("lexer/lexer.zig");
 const std = @import("std");
 
-fn getFileContents(file: std.fs.File) ![]const u8 {
-    var allocator = std.heap.page_allocator;
+fn getFileContents(allocator: std.mem.Allocator, file: std.fs.File) ![]const u8 {
     var buffer: usize = 1024;
     var result = try file.readToEndAlloc(allocator, buffer);
+
+    // TODO: If the buffer is too small, double the size and try again
+
     return result;
 }
 
-fn run(cmd: [][]u8) !void {
+fn run(allocator: std.mem.Allocator, cmd: [][]u8) !noreturn {
     // Opening, reading, and lexing the file
     var file = try std.fs.cwd().openFile(cmd[2], .{});
-    var input: []const u8 = try getFileContents(file);
+    var input: []const u8 = try getFileContents(allocator, file);
 
     lexer.initScanner(input);
 
     while (true) {
         const token = lexer.scanToken();
-        std.debug.print("{} \n", .{token.type});
+        std.debug.print("Token: {any}\n", .{(token.type)});
         if (token.type == .Eof) {
             break;
         }
     }
 
-    std.os.exit(0);
+    defer allocator.free(input);
+
+    return undefined;
 }
 
-fn checkForCompilerCmd(args: [][]u8) !usize {
+fn checkForCompilerCmd(allocator: std.mem.Allocator, args: [][]u8) !usize {
     for (args) |arg| {
         if (std.mem.eql(u8, "build", arg) or std.mem.eql(u8, "run", arg)) {
-            try run(args);
+            try run(allocator, args);
             return 0;
         }
         if (std.mem.eql(u8, "-v", arg)) {
@@ -51,7 +55,7 @@ pub fn main() !void {
     defer std.process.argsFree(allocator, args);
 
     // Check for compiler command
-    const compilerCmdIndex = try checkForCompilerCmd(args);
+    const compilerCmdIndex = try checkForCompilerCmd(allocator, args);
     if (compilerCmdIndex == 1) {
         std.debug.print("No compiler command found\n", .{});
         std.debug.print("Usage: zura [build|run] <file.zu> [args...]\n", .{});

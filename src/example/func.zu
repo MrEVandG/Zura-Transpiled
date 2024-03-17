@@ -1,10 +1,11 @@
 # Make a function that adds to numbers together
-fn add(a: i8, b: i8) -> i16 {
-    ret ~ a + b;
+fn fib(n: i32) -> i32 {
+    if(n <= 1) ret n;
+    ret fib(n - 1) + fib(n - 2);
 }
 
 fn main() -> !void {
-    info "result: %i", .{add(1, 2)} ~;
-    ret 0;
+    auto fib = fib(10);
+    info("fib(10) = %d", .{fib}); ~
+    ret 0
 }
-
