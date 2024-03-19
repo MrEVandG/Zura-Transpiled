@@ -13,15 +13,40 @@ pub const keywordHash = std.ComptimeStringMap(tokens.TokenType, .{
     .{ "else", tokens.TokenType.Else },
 });
 
+pub fn sCharLookUp(schar: u8) ?tokens.TokenType {
+    const hash = std.ComptimeStringMap(tokens.TokenType, .{
+        .{ "(", tokens.TokenType.lParen },
+        .{ ")", tokens.TokenType.rParen },
+        .{ "{", tokens.TokenType.lBrace },
+        .{ "}", tokens.TokenType.rBrace },
+        .{ "[", tokens.TokenType.lBrac },
+        .{ "]", tokens.TokenType.rBrac },
+        .{ ",", tokens.TokenType.comma },
+        .{ "-", tokens.TokenType.minus },
+        .{ "+", tokens.TokenType.plus },
+        .{ "/", tokens.TokenType.slash },
+        .{ "*", tokens.TokenType.star },
+        .{ "%", tokens.TokenType.mod },
+        .{ "^", tokens.TokenType.caret },
+        .{ "!", tokens.TokenType.not },
+        .{ ";", tokens.TokenType.semicolon },
+        .{ ":", tokens.TokenType.colon },
+        .{ "=", tokens.TokenType.equal },
+        .{ ".", tokens.TokenType.dot },
+    });
+    // Casting the u8 to a string of 1 to use it as a key
+    return hash.get(&[1]u8{schar});
+}
+
 pub fn dCharLookUp(dchar: [2]u8) ?tokens.TokenType {
     const hash = std.ComptimeStringMap(tokens.TokenType, .{
-        .{ "==", .eEqual },
-        .{ "!=", .nEqual },
-        .{ "<=", .ltEqual },
-        .{ ">=", .gtEqual },
-        .{ ":=", .Walrus },
-        .{ "->", .lArrow },
-        .{ "<-", .rArrow },
+        .{ "==", tokens.TokenType.eEqual },
+        .{ "!=", tokens.TokenType.nEqual },
+        .{ "<=", tokens.TokenType.ltEqual },
+        .{ ">=", tokens.TokenType.gtEqual },
+        .{ ":=", tokens.TokenType.Walrus },
+        .{ "->", tokens.TokenType.lArrow },
+        .{ "<-", tokens.TokenType.rArrow },
     });
     return hash.get(&dchar);
 }

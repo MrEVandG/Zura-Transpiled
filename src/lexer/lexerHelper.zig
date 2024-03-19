@@ -31,7 +31,7 @@ pub fn makeToken(kind: tokens.TokenType) Token {
 }
 
 pub fn errorToken(message: []const u8) Token {
-    lError.lError(tokens.scanner.line, tokens.scanner.pos - 1, message);
+    lError.lError(tokens.scanner.line, tokens.scanner.pos - 2, message);
     return makeToken(tokens.TokenType.Error);
 }
 

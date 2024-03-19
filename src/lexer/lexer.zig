@@ -6,6 +6,7 @@ const helper = @import("lexerHelper.zig");
 
 const keywordHash = @import("lexerMaps.zig").keywordHash;
 const dCharLookUp = @import("lexerMaps.zig").dCharLookUp;
+const sCharLookUp = @import("lexerMaps.zig").sCharLookUp;
 
 const isDigit = std.ascii.isDigit;
 const isAplha = std.ascii.isAlphabetic;
@@ -81,6 +82,7 @@ pub fn scanToken() Token {
     if (advance()) |c| {
         if (isAplha(c)) return ident();
         if (isDigit(c)) return num();
+        if (c == '"') return string();
 
         if (peek(0)) |c2| {
             var dChar = [2]u8{ c, c2 };
@@ -90,28 +92,11 @@ pub fn scanToken() Token {
             }
         }
 
-        return switch (c) {
-            '(' => makeToken(.lParen),
-            ')' => makeToken(.rParen),
-            '{' => makeToken(.lBrace),
-            '}' => makeToken(.rBrace),
-            '[' => makeToken(.lBrac),
-            ']' => makeToken(.rBrac),
-            ',' => makeToken(.comma),
-            '-' => makeToken(.minus),
-            '+' => makeToken(.plus),
-            '/' => makeToken(.slash),
-            '*' => makeToken(.star),
-            '%' => makeToken(.mod),
-            '^' => makeToken(.caret),
-            '!' => makeToken(.not),
-            ';' => makeToken(.semicolon),
-            ':' => makeToken(.colon),
-            '=' => makeToken(.equal),
-            '.' => makeToken(.dot),
-            '"' => string(),
-            else => errorToken("Unexpected character."),
-        };
+        if (sCharLookUp(c)) |it| {
+            return makeToken(it);
+        }
+
+        return errorToken("Unexpected character.");
     }
     return makeToken(.Eof);
 }
