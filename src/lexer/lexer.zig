@@ -1,64 +1,20 @@
 const std = @import("std");
 
-pub const tokens = @import("tokens.zig");
-
-const Token = @import("tokens.zig").Token;
+const tokens = @import("tokens.zig");
 const lError = @import("../helper/error.zig");
+const helper = @import("lexerHelper.zig");
 
 const keywordHash = @import("lexerMaps.zig").keywordHash;
 const dCharLookUp = @import("lexerMaps.zig").dCharLookUp;
 
 const isDigit = std.ascii.isDigit;
 const isAplha = std.ascii.isAlphabetic;
-
-pub fn initScanner(source: []const u8) void {
-    tokens.scanner.current = source;
-    tokens.scanner.source = source;
-    tokens.scanner.start = source;
-    tokens.scanner.line = 1;
-    tokens.scanner.pos = 0;
-}
-
-pub fn lineStart(line: usize) []const u8 {
-    var start = tokens.scanner.source;
-    var cLine: usize = 1;
-
-    while (cLine != line) {
-        if (start[0] == '\n')
-            cLine += 1;
-        start = start[1..];
-    }
-    return start;
-}
-
-fn makeToken(kind: tokens.TokenType) Token {
-    tokens.token.line = tokens.scanner.line;
-    tokens.token.pos = tokens.scanner.pos;
-    tokens.token.type = kind;
-    return tokens.token;
-}
-
-fn errorToken(message: []const u8) Token {
-    lError.lError(tokens.scanner.line, tokens.scanner.pos - 1, message);
-    return makeToken(tokens.TokenType.Error);
-}
-
-fn isEof() bool {
-    return tokens.scanner.current.len == 0;
-}
-
-fn advance() ?u8 {
-    if (isEof()) return null;
-    const result = tokens.scanner.current[0];
-    tokens.scanner.current = tokens.scanner.current[1..];
-    tokens.scanner.pos += 1;
-    return result;
-}
-
-fn peek(index: usize) ?u8 {
-    if (index >= tokens.scanner.current.len) return null;
-    return tokens.scanner.current[index];
-}
+const Token = tokens.Token;
+const peek = helper.peek;
+const advance = helper.advance;
+const makeToken = helper.makeToken;
+const errorToken = helper.errorToken;
+const isEof = helper.isEof;
 
 fn num() Token {
     while (isDigit(peek(0) orelse 0)) _ = advance();
@@ -99,23 +55,21 @@ fn ident() Token {
 }
 
 fn skipWhiteSpace() void {
-    while (true) {
-        if (peek(0)) |c| {
-            switch (c) {
-                ' ', '\t', '\r' => {
-                    _ = advance();
-                },
-                '\n' => {
-                    tokens.scanner.line += 1;
-                    tokens.scanner.pos = 0;
-                    _ = advance();
-                },
-                '#' => {
-                    while (peek(0) != '\n' and !isEof()) _ = advance();
-                },
-                else => return,
-            }
-        } else return;
+    while (peek(0)) |c| {
+        switch (c) {
+            ' ', '\t', '\r' => {
+                _ = advance();
+            },
+            '\n' => {
+                tokens.scanner.line += 1;
+                tokens.scanner.pos = 0;
+                _ = advance();
+            },
+            '#' => {
+                while (peek(0) != '\n' and !isEof()) _ = advance();
+            },
+            else => return,
+        }
     }
 }
 

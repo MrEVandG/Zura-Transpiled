@@ -1,7 +1,7 @@
 const std = @import("std");
 const print = std.debug.print;
 
-const lineStart = @import("../lexer/lexer.zig").lineStart;
+const lineStart = @import("../lexer/lexerHelper.zig").lineStart;
 const Chameleon = @import("inc/chameleon.zig").Chameleon;
 
 fn printCharOrPlace(c: u8) void {
@@ -15,7 +15,7 @@ fn printCharOrPlace(c: u8) void {
 
 pub fn lError(line: usize, pos: usize, msg: []const u8) void {
     comptime var cham = Chameleon.init(.Auto);
-    print("[{}::{}] ", .{ line, pos });
+    print("[{}::{}] ", .{ line, pos - 1 });
     print(cham.red().fmt("ERROR"), .{});
     print(" -> ", .{});
     print("{s}\n", .{msg});

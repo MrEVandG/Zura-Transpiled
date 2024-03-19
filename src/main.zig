@@ -1,4 +1,5 @@
 const lexer = @import("lexer/lexer.zig");
+const initScanner = @import("lexer/lexerHelper.zig").initScanner;
 const std = @import("std");
 
 fn getFileContents(allocator: std.mem.Allocator, file: std.fs.File) ![]const u8 {
@@ -15,7 +16,7 @@ fn run(allocator: std.mem.Allocator, cmd: [][]u8) !noreturn {
     var file = try std.fs.cwd().openFile(cmd[2], .{});
     var input: []const u8 = try getFileContents(allocator, file);
 
-    lexer.initScanner(input);
+    initScanner(input);
 
     while (true) {
         const token = lexer.scanToken();
