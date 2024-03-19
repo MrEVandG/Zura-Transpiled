@@ -27,7 +27,7 @@ fn run(allocator: std.mem.Allocator, cmd: [][]u8) !noreturn {
 
     defer allocator.free(input);
 
-    return undefined;
+    return std.os.exit(0) orelse unreachable;
 }
 
 fn checkForCompilerCmd(allocator: std.mem.Allocator, args: [][]u8) !usize {

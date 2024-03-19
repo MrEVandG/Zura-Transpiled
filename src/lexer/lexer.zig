@@ -5,6 +5,9 @@ pub const tokens = @import("tokens.zig");
 const Token = @import("tokens.zig").Token;
 const lError = @import("../helper/error.zig");
 
+const keywordHash = @import("lexerMaps.zig").keywordHash;
+const dCharLookUp = @import("lexerMaps.zig").dCharLookUp;
+
 const isDigit = std.ascii.isDigit;
 const isAplha = std.ascii.isAlphabetic;
 
@@ -81,17 +84,7 @@ fn string() Token {
 }
 
 fn getTokenType(keyword: []const u8) tokens.TokenType {
-    const hash = std.ComptimeStringMap(tokens.TokenType, .{
-        .{ "fn", .Func },
-        .{ "ret", .Return },
-        .{ "info", .Info },
-        .{ "have", .Have },
-        .{ "const", .Const },
-        .{ "auto", .Auto },
-        .{ "if", .If },
-        .{ "else", .Else },
-    });
-    return hash.get(keyword) orelse .Ident;
+    return keywordHash.get(keyword) orelse .Ident;
 }
 
 fn identType() tokens.TokenType {
@@ -124,19 +117,6 @@ fn skipWhiteSpace() void {
             }
         } else return;
     }
-}
-
-fn dCharLookUp(dchar: [2]u8) ?tokens.TokenType {
-    const hash = std.ComptimeStringMap(tokens.TokenType, .{
-        .{ "==", .eEqual },
-        .{ "!=", .nEqual },
-        .{ "<=", .ltEqual },
-        .{ ">=", .gtEqual },
-        .{ ":=", .Walrus },
-        .{ "->", .lArrow },
-        .{ "<-", .rArrow },
-    });
-    return hash.get(&dchar);
 }
 
 pub fn scanToken() Token {
