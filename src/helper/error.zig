@@ -13,7 +13,7 @@ fn printCharOrPlace(c: u8) void {
     }
 }
 
-pub fn lError(line: usize, pos: usize, msg: []const u8) void {
+pub fn lError(line: usize, pos: usize, msg: []const u8, source: []const u8) !void {
     comptime var cham = Chameleon.init(.Auto);
     print("[{}::{}] ", .{ line, pos });
     print(cham.red().fmt("ERROR"), .{});
@@ -21,7 +21,7 @@ pub fn lError(line: usize, pos: usize, msg: []const u8) void {
     print("{s}\n", .{msg});
 
     // Print our the line
-    var start = lineStart(line);
+    var start = try lineStart(line, source);
     var end = start;
 
     while (end.len > 0 and end[0] != '\n' and end[0] != 0)

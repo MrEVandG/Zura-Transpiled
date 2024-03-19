@@ -11,15 +11,19 @@ pub fn initScanner(source: []const u8) void {
     tokens.scanner.pos = 0;
 }
 
-pub fn lineStart(line: usize) []const u8 {
-    var start = tokens.scanner.source;
-    var cLine: usize = 1;
+pub fn lineStart(line: usize, source: []const u8) ![]const u8 {
+    if (line == 0) return error.LineStartZero;
+    if (source.len == 0) return error.LineStartEmpty;
 
-    while (cLine != line) {
-        if (start[0] == '\n')
-            cLine += 1;
+    var cLine: usize = 1;
+    var start = source;
+
+    while (cLine < line) {
+        if (start.len == 0) return error.LineStartNotFound;
+        if (start[0] == '\n') cLine += 1;
         start = start[1..];
     }
+
     return start;
 }
 
@@ -30,8 +34,8 @@ pub fn makeToken(kind: tokens.TokenType) Token {
     return tokens.token;
 }
 
-pub fn errorToken(message: []const u8) Token {
-    lError.lError(tokens.scanner.line, tokens.scanner.pos - 2, message);
+pub fn errorToken(message: []const u8) !Token {
+    try lError.lError(tokens.scanner.line, tokens.scanner.pos - 2, message, tokens.scanner.source);
     return makeToken(tokens.TokenType.Error);
 }
 

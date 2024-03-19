@@ -27,7 +27,7 @@ fn num() Token {
     return makeToken(.Num);
 }
 
-fn string() Token {
+fn string() !Token {
     while (peek(0) != '"' and !isEof()) {
         if (peek(0) == '\n') {
             tokens.scanner.line += 1;
@@ -35,7 +35,7 @@ fn string() Token {
         }
         _ = advance();
     }
-    if (isEof()) return errorToken("Unterminated string.");
+    if (isEof()) return try errorToken("Unterminated string.");
     _ = advance();
     return makeToken(.String);
 }
@@ -74,7 +74,7 @@ fn skipWhiteSpace() void {
     }
 }
 
-pub fn scanToken() Token {
+pub fn scanToken() !Token {
     skipWhiteSpace();
 
     tokens.scanner.start = tokens.scanner.current;
@@ -96,7 +96,7 @@ pub fn scanToken() Token {
             return makeToken(it);
         }
 
-        return errorToken("Unexpected character.");
+        return try errorToken("Unexpected character.");
     }
     return makeToken(.Eof);
 }
