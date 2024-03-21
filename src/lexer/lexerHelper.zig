@@ -49,7 +49,7 @@ pub fn makeToken(kind: tokens.TokenType) !Token {
 }
 
 pub fn errorToken(message: []const u8) !Token {
-    try lError.lError(tokens.scanner.line, tokens.scanner.pos - 2, message, tokens.scanner.source);
+    try lError.Error(tokens.scanner.line, tokens.scanner.pos - 2, message, tokens.scanner.source, "LEXER ERROR");
     return makeToken(tokens.TokenType.Error);
 }
 

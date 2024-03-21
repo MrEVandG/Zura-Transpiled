@@ -1,5 +1,6 @@
 const lexer = @import("lexer/lexer.zig");
 const initScanner = @import("lexer/lexerHelper.zig").initScanner;
+const parser = @import("parser/parser.zig");
 const std = @import("std");
 
 fn getFileContents(allocator: std.mem.Allocator, file: std.fs.File) ![]const u8 {
@@ -18,13 +19,10 @@ fn run(allocator: std.mem.Allocator, cmd: [][]u8) !noreturn {
 
     initScanner(input);
 
-    while (true) {
-        const token = try lexer.scanToken();
-        std.debug.print("Line: {any}\n\tToken: {any}\n\tLexem: {s}\n", .{ token.line, token.type, token.lexem });
-        if (token.type == .Eof) {
-            break;
-        }
-    }
+    // Parsing the file
+    var result = try parser.parse();
+
+    std.debug.print("Result: {any}\n", .{result});
 
     defer allocator.free(input);
 
