@@ -36,6 +36,7 @@ pub const TokenType = enum {
     // Literals
     Ident,
     Num,
+    Float,
     String,
 
     // Keywords
@@ -62,7 +63,10 @@ pub const TokenType = enum {
     FL32,
     FL64,
     CHAR,
-    BOOl,
+    STR,
+    BL,
+    VOID,
+    NULL,
 
     Error,
     Eof,
@@ -70,6 +74,7 @@ pub const TokenType = enum {
 
 pub const Token = struct {
     type: TokenType,
+    lexem: []const u8,
     line: usize,
     pos: usize,
 };
@@ -92,6 +97,7 @@ pub var scanner: Scanner = Scanner{
 
 pub var token: Token = Token{
     .type = TokenType.Start,
+    .lexem = "",
     .line = 1,
     .pos = 0,
 };

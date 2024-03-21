@@ -1,3 +1,4 @@
+const std = @import("std");
 const tokens = @import("tokens.zig");
 const lError = @import("../helper/error.zig");
 
@@ -27,9 +28,22 @@ pub fn lineStart(line: usize, source: []const u8) ![]const u8 {
     return start;
 }
 
-pub fn makeToken(kind: tokens.TokenType) Token {
+fn getLexem(start: []const u8, end: []const u8) ![]const u8 {
+    if (start.len == 0 and end.len == 0)
+        return "EOF";
+
+    var length = @intFromPtr(end.ptr) - @intFromPtr(start.ptr);
+
+    if (start[0] == '\n')
+        return start[1..length];
+
+    return start[0..length];
+}
+
+pub fn makeToken(kind: tokens.TokenType) !Token {
     tokens.token.line = tokens.scanner.line;
     tokens.token.pos = tokens.scanner.pos;
+    tokens.token.lexem = try getLexem(tokens.scanner.start, tokens.scanner.current);
     tokens.token.type = kind;
     return tokens.token;
 }

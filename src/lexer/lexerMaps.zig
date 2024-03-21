@@ -11,6 +11,24 @@ pub const keywordHash = std.ComptimeStringMap(tokens.TokenType, .{
     .{ "auto", tokens.TokenType.Auto },
     .{ "if", tokens.TokenType.If },
     .{ "else", tokens.TokenType.Else },
+
+    // Data Types
+    .{ "int", tokens.TokenType.INT },
+    .{ "i8", tokens.TokenType.I8 },
+    .{ "i16", tokens.TokenType.I16 },
+    .{ "i32", tokens.TokenType.I32 },
+    .{ "i64", tokens.TokenType.I64 },
+    .{ "u8", tokens.TokenType.U8 },
+    .{ "u16", tokens.TokenType.U16 },
+    .{ "u32", tokens.TokenType.U32 },
+    .{ "u64", tokens.TokenType.U64 },
+    .{ "f32", tokens.TokenType.FL32 },
+    .{ "f64", tokens.TokenType.FL64 },
+    .{ "bool", tokens.TokenType.BL },
+    .{ "char", tokens.TokenType.CHAR },
+    .{ "str", tokens.TokenType.STR },
+    .{ "void", tokens.TokenType.VOID },
+    .{ "null", tokens.TokenType.NULL },
 });
 
 pub fn sCharLookUp(schar: u8) ?tokens.TokenType {

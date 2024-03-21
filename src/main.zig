@@ -20,7 +20,7 @@ fn run(allocator: std.mem.Allocator, cmd: [][]u8) !noreturn {
 
     while (true) {
         const token = try lexer.scanToken();
-        std.debug.print("Token: {any}\n", .{(token.type)});
+        std.debug.print("Line: {any}\n\tToken: {any}\n\tLexem: {s}\n", .{ token.line, token.type, token.lexem });
         if (token.type == .Eof) {
             break;
         }

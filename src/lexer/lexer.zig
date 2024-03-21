@@ -17,14 +17,16 @@ const makeToken = helper.makeToken;
 const errorToken = helper.errorToken;
 const isEof = helper.isEof;
 
-fn num() Token {
+fn num() !Token {
     while (isDigit(peek(0) orelse 0)) _ = advance();
     if (peek(0) == '.' and isDigit(peek(1) orelse 0)) {
         _ = advance();
         while (isDigit(peek(0) orelse 0))
             _ = advance();
+
+        return try makeToken(.Float);
     }
-    return makeToken(.Num);
+    return try makeToken(.Num);
 }
 
 fn string() !Token {
@@ -37,7 +39,7 @@ fn string() !Token {
     }
     if (isEof()) return try errorToken("Unterminated string.");
     _ = advance();
-    return makeToken(.String);
+    return try makeToken(.String);
 }
 
 fn getTokenType(keyword: []const u8) tokens.TokenType {
@@ -49,10 +51,10 @@ fn identType() tokens.TokenType {
     return getTokenType(keyword);
 }
 
-fn ident() Token {
+fn ident() !Token {
     while (isAplha(peek(0) orelse 0) or isDigit(peek(0) orelse 0))
         _ = advance();
-    return makeToken(identType());
+    return try makeToken(identType());
 }
 
 fn skipWhiteSpace() void {
@@ -88,15 +90,15 @@ pub fn scanToken() !Token {
             var dChar = [2]u8{ c, c2 };
             if (dCharLookUp(dChar)) |it| {
                 _ = advance();
-                return makeToken(it);
+                return try makeToken(it);
             }
         }
 
         if (sCharLookUp(c)) |it| {
-            return makeToken(it);
+            return try makeToken(it);
         }
 
         return try errorToken("Unexpected character.");
     }
-    return makeToken(.Eof);
+    return try makeToken(.Eof);
 }

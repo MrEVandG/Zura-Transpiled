@@ -16,7 +16,7 @@ fn printCharOrPlace(c: u8) void {
 pub fn lError(line: usize, pos: usize, msg: []const u8, source: []const u8) !void {
     comptime var cham = Chameleon.init(.Auto);
     print("[{}::{}] ", .{ line, pos });
-    print(cham.red().fmt("ERROR"), .{});
+    print(cham.red().fmt("LEXER ERROR"), .{});
     print(" -> ", .{});
     print("{s}\n", .{msg});
 
