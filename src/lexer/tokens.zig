@@ -80,6 +80,7 @@ pub const Token = struct {
 };
 
 const Scanner = struct {
+    filename: []u8,
     source: []const u8,
     start: []const u8,
     current: []const u8,
@@ -88,6 +89,7 @@ const Scanner = struct {
 };
 
 pub var scanner: Scanner = Scanner{
+    .filename = "",
     .source = "",
     .start = "",
     .current = "",

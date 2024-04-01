@@ -1,4 +1,5 @@
 const lexer = @import("lexer/lexer.zig");
+const tokens = @import("lexer/tokens.zig");
 const initScanner = @import("lexer/lexerHelper.zig").initScanner;
 const parser = @import("parser/parser.zig");
 const std = @import("std");
@@ -16,6 +17,8 @@ fn run(allocator: std.mem.Allocator, cmd: [][]u8) !noreturn {
     // Opening, reading, and lexing the file
     var file = try std.fs.cwd().openFile(cmd[2], .{});
     var input: []const u8 = try getFileContents(allocator, file);
+
+    tokens.scanner.filename = cmd[2];
 
     initScanner(input);
 

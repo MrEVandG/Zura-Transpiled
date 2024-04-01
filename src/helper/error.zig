@@ -2,6 +2,7 @@ const std = @import("std");
 const print = std.debug.print;
 
 const lineStart = @import("../lexer/lexerHelper.zig").lineStart;
+const token = @import("../lexer/tokens.zig");
 const Chameleon = @import("inc/chameleon.zig").Chameleon;
 
 fn printCharOrPlace(c: u8) void {
@@ -13,15 +14,20 @@ fn printCharOrPlace(c: u8) void {
     }
 }
 
-pub fn Error(line: usize, pos: usize, msg: []const u8, source: []const u8, comptime typeOfError: []const u8) !void {
+pub fn Error(
+    line: usize,
+    pos: usize,
+    msg: []const u8,
+    comptime typeOfError: []const u8,
+    filename: []u8,
+) !void {
     comptime var cham = Chameleon.init(.Auto);
-    print("[{}::{}] ", .{ line, pos });
+    print("[{}::{}] ({s}) \n ↳ ", .{ line, pos, filename });
     print(cham.red().fmt(typeOfError), .{});
-    print(" -> ", .{});
-    print("{s}\n", .{msg});
+    print(" {s}\n", .{msg});
 
     // Print our the line
-    var start = try lineStart(line, source);
+    var start = try lineStart(line, token.scanner.source);
     var end = start;
 
     while (end.len > 0 and end[0] != '\n' and end[0] != 0)
