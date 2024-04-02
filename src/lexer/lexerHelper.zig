@@ -49,7 +49,13 @@ pub fn makeToken(kind: tokens.TokenType) !Token {
 }
 
 pub fn errorToken(message: []const u8) !Token {
-    try lError.Error(tokens.scanner.line, tokens.scanner.pos - 1, message, "LEXER ERROR", tokens.scanner.filename);
+    try lError.Error(
+        tokens.scanner.line,
+        tokens.scanner.pos - 1,
+        message,
+        "LEXER ERROR",
+        tokens.scanner.filename,
+    );
     return makeToken(tokens.TokenType.Error);
 }
 
