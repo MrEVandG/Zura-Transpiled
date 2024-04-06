@@ -1,5 +1,4 @@
 pub const TokenType = enum {
-    Start,
     // Single Characters
     lParen,
     rParen,
@@ -74,7 +73,7 @@ pub const TokenType = enum {
 
 pub const Token = struct {
     type: TokenType,
-    lexem: []const u8,
+    value: []const u8,
     line: usize,
     pos: usize,
 };
@@ -88,18 +87,5 @@ const Scanner = struct {
     pos: usize,
 };
 
-pub var scanner: Scanner = Scanner{
-    .filename = "",
-    .source = "",
-    .start = "",
-    .current = "",
-    .line = 1,
-    .pos = 0,
-};
-
-pub var token: Token = Token{
-    .type = TokenType.Start,
-    .lexem = "",
-    .line = 1,
-    .pos = 0,
-};
+pub var scanner: Scanner = undefined;
+pub var token: Token = undefined;

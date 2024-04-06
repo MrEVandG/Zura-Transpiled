@@ -4,83 +4,50 @@ const prec = @import("prec.zig");
 const token = @import("../lexer/tokens.zig");
 const pError = @import("../helper/error.zig");
 const lexer = @import("../lexer/lexer.zig");
+const ast = @import("../ast/ast.zig");
 
-pub fn expr(pc: prec.Prec) void {
-    var left = prefix().?;
+pub fn parseExpr(bp: prec.bp) ast.Expr {
+    var left = prec.nud_lookup(token.token.type);
 
-    while (true) {
-        var nextPrec = prec.getPrec();
-        if (nextPrec.level < pc.level or (nextPrec.level == pc.level and pc.associativity == .lft)) {
-            break;
-        }
-        left = infix(left).?;
+    // We need to check the current tokens bp and compare it to the left bp
+    while (prec.bp_lookup(token.token.type).?.bp > bp) {
+        left = prec.led_lookup(token.token.type, left);
     }
+
+    return left;
 }
 
-fn prefix() ?token.TokenType {
-    switch (token.token.type) {
-        .Num => number(),
-        .lParen => group(),
-        .minus, .not => unary(),
-        else => {
-            std.debug.print("Token not found\n", .{});
-            std.os.exit(1);
+pub fn parsePrimary() ast.Expr {
+    const tok = token.token.type;
+    switch (tok) {
+        .Num => {
+            return ast.expr.Number{ .value = token.token.value };
         },
-    }
-    return token.token.type;
-}
-
-fn infix(left: token.TokenType) ?token.TokenType {
-    var right = token.TokenType.Start;
-    switch (left) {
-        .plus, .minus, .star, .slash => {
-            binary();
+        .String => {
+            return ast.expr.String{ .value = token.token.value };
+        },
+        .Ident => {
+            return ast.expr.Ident{ .value = token.token.value };
         },
         else => {
-            std.debug.print("Token not found\n", .{});
-            std.os.exit(1);
+            pError.Error(
+                token.token.line,
+                token.token.pos,
+                "Can not create parser_primary!",
+                "PARSER ERROR",
+                token.scanner.filename,
+            );
         },
     }
-    return right;
 }
 
-fn binary() void {
-    std.debug.print("Binary: {s}\n", .{token.token.lexem});
-    _ = lexer.scanToken() catch std.debug.print("Error scanning next token\n", .{});
-    expr(prec.Prec{ .level = 2, .associativity = .lft });
-}
+pub fn parseBinary(left: ast.Expr) ast.Expr {
+    var op = token.token.type;
+    var right = parseExpr(.defalt);
 
-fn number() void {
-    std.debug.print("Number: {s}\n", .{token.token.lexem});
-    _ = lexer.scanToken() catch std.debug.print("Error scanning next token\n", .{});
-}
-
-fn group() void {
-    _ = lexer.scanToken() catch std.debug.print("Error scanning next token\n", .{});
-    std.debug.print("Grouping\n", .{});
-
-    expr(prec.Prec{ .level = 1, .associativity = .rgt });
-
-    if (token.token.type != token.TokenType.rParen) {
-        std.debug.print("Expected ')' after expression\n", .{});
-        std.os.exit(1);
-    }
-
-    _ = lexer.scanToken() catch std.debug.print("Error scanning next token\n", .{});
-    std.debug.print("Grouping\n", .{});
-}
-
-fn unary() void {
-    std.debug.print("Unary: {s}\n", .{token.token.lexem});
-    _ = lexer.scanToken() catch std.debug.print("Error scanning next token\n", .{});
-    expr(prec.Prec{ .level = 3, .associativity = .rgt });
-
-    switch (token.token.type) {
-        .minus => std.debug.print("Negation\n", .{}),
-        .not => std.debug.print("Not\n", .{}),
-        else => {
-            std.debug.print("Token not found\n", .{});
-            std.os.exit(1);
-        },
-    }
+    return ast.expr.Binary{
+        .left = left,
+        .op = op,
+        .right = right,
+    };
 }

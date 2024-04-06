@@ -53,8 +53,12 @@ fn currentLine(line: usize, pos: usize) !void {
 
     // show where the error is!
     var i: usize = 0;
+    var cPos: usize = pos;
+    if (line == 1) cPos += 1;
+
     printIgnore(line); // ignore the 01|
-    while (i < (pos - 1)) : (i += 1)
+
+    while (i < (cPos - 1)) : (i += 1)
         printCharOrPlace(start[i]);
     print(cham.red().fmt("^\n"), .{});
 }
@@ -72,11 +76,17 @@ pub fn Error(
     filename: []u8,
 ) !void {
     comptime var cham = Chameleon.init(.Auto);
-    print("[{}::{}] ({s}) \n ↳ ", .{ line, pos, filename });
+
+    var cPos: usize = pos;
+    if (line == 1) cPos += 1;
+
+    print("[{}::{}] ({s}) \n ↳ ", .{ line, cPos, filename });
     print(cham.red().fmt(typeOfError), .{});
     print(" {s}\n", .{msg});
 
     try lineBefore(line - 1);
     try currentLine(line, pos);
     try lineAfter(line + 1);
+
+    print("\n", .{});
 }

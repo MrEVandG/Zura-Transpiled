@@ -7,9 +7,7 @@ const std = @import("std");
 fn getFileContents(allocator: std.mem.Allocator, file: std.fs.File) ![]const u8 {
     var buffer: usize = 1024;
     var result = try file.readToEndAlloc(allocator, buffer);
-
     // TODO: If the buffer is too small, double the size and try again
-
     return result;
 }
 
@@ -23,9 +21,9 @@ fn run(allocator: std.mem.Allocator, cmd: [][]u8) !noreturn {
     initScanner(input);
 
     // Parsing the file
-    var result = try parser.parse();
+    try parser.parse(allocator);
 
-    std.debug.print("Result: {any}\n", .{result});
+    std.debug.print("\n", .{});
 
     defer allocator.free(input);
 

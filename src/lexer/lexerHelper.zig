@@ -28,7 +28,7 @@ pub fn lineStart(line: usize, source: []const u8) ![]const u8 {
     return start;
 }
 
-fn getLexem(start: []const u8, end: []const u8) ![]const u8 {
+fn getValue(start: []const u8, end: []const u8) ![]const u8 {
     if (start.len == 0 and end.len == 0)
         return "EOF";
 
@@ -43,7 +43,10 @@ fn getLexem(start: []const u8, end: []const u8) ![]const u8 {
 pub fn makeToken(kind: tokens.TokenType) !Token {
     tokens.token.line = tokens.scanner.line;
     tokens.token.pos = tokens.scanner.pos;
-    tokens.token.lexem = try getLexem(tokens.scanner.start, tokens.scanner.current);
+    tokens.token.value = try getValue(
+        tokens.scanner.start,
+        tokens.scanner.current,
+    );
     tokens.token.type = kind;
     return tokens.token;
 }
