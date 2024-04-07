@@ -1,17 +1,24 @@
 const std = @import("std");
 
 const token = @import("../lexer/tokens.zig");
+const lexer = @import("../lexer/lexer.zig");
+const ast = @import("../ast/ast.zig");
+const prec = @import("prec.zig");
 const h = @import("helper.zig");
+
+pub fn storeToken(parser: *h.Parser, tk: token.Token) !void {
+    _ = try lexer.scanToken(); // get ride if the start token
+    while (token.token.type != token.TokenType.Eof) {
+        try parser.tks.append(tk);
+        _ = try lexer.scanToken();
+    }
+}
 
 pub fn parse(allocator: std.mem.Allocator) !void {
     var parser = h.init_parser(allocator);
 
-    try h.storeToken(&parser, token.token);
+    try storeToken(&parser, token.token);
 
-    while (parser.index < parser.tks.items.len) {
-        std.debug.print("{s}", .{h.current(&parser).value});
-
-        if (parser.index + 1 >= parser.tks.items.len) break;
-        _ = h.next(&parser);
-    }
+    var res = h.parse_expr(&parser, prec.binding_power.default);
+    ast.printExpr(res);
 }
