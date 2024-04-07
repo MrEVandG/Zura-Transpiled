@@ -37,15 +37,17 @@ pub fn parse_expr(parser: *Parser, bp: prec.binding_power) ast.Expr {
     var c_tok = current(parser);
     var left = prec.nud_handler(parser, c_tok.type);
 
-    // advance to the next token
     if (parser.index + 1 < parser.tks.items.len) {
-        std.debug.print("next token: {any}\n", .{parser.tks.items[parser.index + 1].type});
-        _ = next(parser);
+        c_tok = next(parser);
+    } else {
+        return left;
     }
 
-    var value = @intFromEnum(prec.get_binding_power(current(parser).type));
+    var value = @intFromEnum(prec.get_binding_power(c_tok.type));
     while (value > @intFromEnum(bp)) {
         left = prec.led_handler(parser, &left);
+        c_tok = current(parser);
+        value = @intFromEnum(prec.get_binding_power(c_tok.type));
     }
 
     return left;

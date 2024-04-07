@@ -3,6 +3,7 @@ const std = @import("std");
 const token = @import("../lexer/tokens.zig");
 const ast = @import("../ast/ast.zig");
 const psr = @import("./helper.zig");
+const expr = @import("expr.zig");
 
 // based off of c operator precedence map
 // http://en.cppreference.com/w/c/language/operator_precedence
@@ -17,10 +18,11 @@ pub const binding_power = enum(usize) {
     compare = 7, // < > <= >=
     additive = 8, // + -
     multiplicative = 9, // * / %
-    prefix = 10, // ++ -- + - ! ~
-    postfix = 11, // ++ -- + - ! ~
-    call = 12, // () [] .
-    field = 13, // . ->
+    power = 10, // **
+    prefix = 11, // ++ -- + - ! ~
+    postfix = 12, // ++ -- + - ! ~
+    call = 13, // () [] .
+    field = 14, // . ->
 };
 
 pub fn get_binding_power(tk: token.TokenType) binding_power {
@@ -49,30 +51,53 @@ pub fn get_binding_power(tk: token.TokenType) binding_power {
 }
 
 pub fn nud_handler(parser: *psr.Parser, tk: token.TokenType) ast.Expr {
-    return switch (tk) {
-        .Num => ast.Expr{ .Number = psr.current(parser).value },
-        .String => ast.Expr{ .String = psr.current(parser).value },
-        .Ident => ast.Expr{ .Ident = psr.current(parser).value },
-        else => unreachable, // This should never happen
+    var nud_lookup = blk: {
+        var map = std.EnumMap(
+            token.TokenType,
+            *const fn (*psr.Parser) ast.Expr,
+        ){};
+
+        // Literals
+        map.put(token.TokenType.Num, expr.parse_num);
+        map.put(token.TokenType.String, expr.parse_string);
+        map.put(token.TokenType.Ident, expr.parse_ident);
+
+        // Unary
+        map.put(token.TokenType.not, expr.parse_unary);
+        map.put(token.TokenType.minus, expr.parse_unary);
+
+        break :blk map;
     };
+    return nud_lookup.get(tk).?(parser);
 }
 
 pub fn led_handler(parser: *psr.Parser, left: *ast.Expr) ast.Expr {
+    var led_lookup = blk: {
+        var map = std.EnumMap(token.TokenType, *const fn (
+            *psr.Parser,
+            *ast.Expr,
+            []const u8,
+            *binding_power,
+        ) ast.Expr){};
+
+        // Binary
+        map.put(token.TokenType.plus, expr.parse_binary);
+        map.put(token.TokenType.minus, expr.parse_binary);
+        map.put(token.TokenType.star, expr.parse_binary);
+        map.put(token.TokenType.slash, expr.parse_binary);
+        map.put(token.TokenType.mod, expr.parse_binary);
+
+        break :blk map;
+    };
+
     var op = psr.current(parser);
     var value = get_binding_power(psr.current(parser).type);
 
     if (parser.index + 1 < parser.tks.items.len)
         _ = psr.next(parser);
 
-    switch (op.type) {
-        .plus, .minus, .star, .slash, .mod => {
-            var right = psr.parse_expr(parser, value);
-            return ast.Expr{ .Binary = ast.BinaryExpr{
-                .op = op.value,
-                .left = left,
-                .right = &right,
-            } };
-        },
-        else => unreachable, // This should never happen
-    }
+    if (led_lookup.get(op.type) == null)
+        std.debug.panic("No led handler for token type: {s}\n", .{op.value});
+
+    return led_lookup.get(op.type).?(parser, &left.*, op.value, &value);
 }

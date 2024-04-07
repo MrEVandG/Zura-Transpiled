@@ -5,13 +5,15 @@ const exprType = enum {
     String,
     Ident,
     Binary,
+    Unary,
 };
 
 pub const Expr = union(exprType) {
-    Number: []const u8,
+    Number: usize,
     String: []const u8,
     Ident: []const u8,
     Binary: BinaryExpr,
+    Unary: UnaryExpr,
 };
 
 pub const BinaryExpr = struct {
@@ -20,19 +22,36 @@ pub const BinaryExpr = struct {
     right: *Expr,
 };
 
-fn print(e: []const u8) void {
-    std.debug.print("{s}", .{e});
+pub const UnaryExpr = struct {
+    op: []const u8,
+    expr: *Expr,
+};
+
+fn printBinaryExpr(e: BinaryExpr) void {
+    std.debug.print("(", .{});
+    printExpr(e.left.*);
+    std.debug.print(" {s} ", .{e.op});
+    printExpr(e.right.*);
+    std.debug.print(")", .{});
 }
 
 pub fn printExpr(e: Expr) void {
     switch (e) {
-        .Number => print(e.Number),
-        .String => print(e.String),
-        .Ident => print(e.Ident),
+        .Number => {
+            std.debug.print("{d}", .{e.Number});
+        },
+        .String => {
+            std.debug.print("{s}", .{e.String});
+        },
+        .Ident => {
+            std.debug.print("{s}", .{e.Ident});
+        },
         .Binary => {
-            printExpr(e.Binary.left.*);
-            print(e.Binary.op);
-            printExpr(e.Binary.right.*);
+            printBinaryExpr(e.Binary);
+        },
+        .Unary => {
+            std.debug.print("{s}", .{e.Unary.op});
+            printExpr(e.Unary.expr.*);
         },
     }
 }
