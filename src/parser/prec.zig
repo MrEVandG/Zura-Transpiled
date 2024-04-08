@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const token = @import("../lexer/tokens.zig");
+const err = @import("../helper/error.zig");
 const ast = @import("../ast/ast.zig");
 const psr = @import("./helper.zig");
 const expr = @import("expr.zig");
@@ -23,9 +24,10 @@ pub const binding_power = enum(usize) {
     postfix = 12, // ++ -- + - ! ~
     call = 13, // () [] .
     field = 14, // . ->
+    err = 15,
 };
 
-pub fn get_binding_power(tk: token.TokenType) binding_power {
+pub fn get_binding_power(parser: *psr.Parser, tk: token.TokenType) binding_power {
     var bp_table = blk: {
         var map = std.EnumMap(token.TokenType, binding_power){};
 
@@ -47,6 +49,13 @@ pub fn get_binding_power(tk: token.TokenType) binding_power {
 
         break :blk map;
     };
+    var current = psr.current(parser);
+    if (bp_table.get(current.type) == null) {
+        parser.errors.append(
+            psr.Parser.Error{ ._tks = current, .msg = "TokenType not found in binding power table!" },
+        ) catch std.os.exit(10);
+        return binding_power.err;
+    }
     return bp_table.get(tk).?;
 }
 
@@ -68,6 +77,13 @@ pub fn nud_handler(parser: *psr.Parser, tk: token.TokenType) ast.Expr {
 
         break :blk map;
     };
+    var current = psr.current(parser);
+    if (nud_lookup.get(tk) == null) {
+        parser.errors.append(
+            psr.Parser.Error{ ._tks = current, .msg = "TokenType not found in nud table!" },
+        ) catch std.os.exit(10);
+        return ast.Expr{ .Err = ast.ExprKind.Err };
+    }
     return nud_lookup.get(tk).?(parser);
 }
 
@@ -91,13 +107,17 @@ pub fn led_handler(parser: *psr.Parser, left: *ast.Expr) ast.Expr {
     };
 
     var op = psr.current(parser);
-    var value = get_binding_power(psr.current(parser).type);
+    var value = get_binding_power(parser, psr.current(parser).type);
+
+    if (led_lookup.get(op.type) == null) {
+        parser.errors.append(
+            psr.Parser.Error{ ._tks = op, .msg = "TokenType not found in led table!" },
+        ) catch std.os.exit(10);
+        return ast.Expr{ .Err = ast.ExprKind.Err };
+    }
 
     if (parser.index + 1 < parser.tks.items.len)
         _ = psr.next(parser);
-
-    if (led_lookup.get(op.type) == null)
-        std.debug.panic("No led handler for token type: {s}\n", .{op.value});
 
     return led_lookup.get(op.type).?(parser, &left.*, op.value, &value);
 }

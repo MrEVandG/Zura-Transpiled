@@ -5,9 +5,7 @@ const prec = @import("prec.zig");
 const psr = @import("helper.zig");
 
 pub fn parse_num(parser: *psr.Parser) ast.Expr {
-    var value = psr.current(parser).value;
-    var num = std.fmt.parseInt(usize, value, 0) catch std.debug.panic("", .{});
-    return ast.Expr{ .Number = num };
+    return ast.Expr{ .Number = psr.current(parser).value };
 }
 
 pub fn parse_string(parser: *psr.Parser) ast.Expr {

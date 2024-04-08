@@ -15,10 +15,11 @@ pub fn storeToken(parser: *h.Parser, tk: token.Token) !void {
 }
 
 pub fn parse(allocator: std.mem.Allocator) !void {
-    var parser = h.init_parser(allocator);
+    var parser = h.Parser.init(allocator);
+    defer parser.deinit();
 
     try storeToken(&parser, token.token);
 
     var res = h.parse_expr(&parser, prec.binding_power.default);
-    ast.printExpr(res);
+    _ = res;
 }

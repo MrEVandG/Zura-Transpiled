@@ -79,7 +79,7 @@ pub const Token = struct {
 };
 
 const Scanner = struct {
-    filename: []u8,
+    filename: []const u8,
     source: []const u8,
     start: []const u8,
     current: []const u8,

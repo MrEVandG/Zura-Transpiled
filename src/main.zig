@@ -11,10 +11,12 @@ fn getFileContents(allocator: std.mem.Allocator, file: std.fs.File) ![]const u8 
     return result;
 }
 
-fn run(allocator: std.mem.Allocator, cmd: [][]u8) !noreturn {
+fn run(allocator: std.mem.Allocator, cmd: []const []const u8) !void {
     // Opening, reading, and lexing the file
     var file = try std.fs.cwd().openFile(cmd[2], .{});
+    defer file.close();
     var input: []const u8 = try getFileContents(allocator, file);
+    defer allocator.free(input);
 
     tokens.scanner.filename = cmd[2];
 
@@ -24,13 +26,9 @@ fn run(allocator: std.mem.Allocator, cmd: [][]u8) !noreturn {
     try parser.parse(allocator);
 
     std.debug.print("\n", .{});
-
-    defer allocator.free(input);
-
-    return std.os.exit(0) orelse unreachable;
 }
 
-fn checkForCompilerCmd(allocator: std.mem.Allocator, args: [][]u8) !usize {
+fn checkForCompilerCmd(allocator: std.mem.Allocator, args: []const []const u8) !i8 {
     for (args) |arg| {
         if (std.mem.eql(u8, "build", arg) or std.mem.eql(u8, "run", arg)) {
             try run(allocator, args);
@@ -57,18 +55,21 @@ pub fn main() !void {
     // Check for compiler command
     const compilerCmdIndex = try checkForCompilerCmd(allocator, args);
     if (compilerCmdIndex == 1) {
-        std.debug.print("No compiler command found\n", .{});
-        std.debug.print("Usage: zura [build|run] <file.zu> [args...]\n", .{});
-        std.debug.print("Compiler commands:\n", .{});
-        std.debug.print("    build => builds the given file to an exacutable\n", .{});
-        std.debug.print("    run   => builds and runs the given file\n", .{});
-        std.debug.print("Args commands:\n", .{});
-        std.debug.print("    -name => assigns a name to the exacutable\n", .{});
-        std.debug.print("    -save => saves the exacutable to a given path\n", .{});
-        std.debug.print("    -sAll => saves the .o and exacutable files\n", .{});
-        std.debug.print("    -c    => delets the exacutable generated and the .o file\n", .{});
-        std.debug.print("Helpful commands:\n", .{});
-        std.debug.print("    -v    => prints the version of the compiler\n", .{});
+        std.debug.print(
+            \\No compiler command found 
+            \\Usage: zura [build|run] <file.zu> [args...]
+            \\Compiler commands:
+            \\    build => builds the given file to an exacutable
+            \\    run   => builds and runs the given file
+            \\Args commands:
+            \\    -name => assigns a name to the exacutable
+            \\    -save => saves the exacutable to a given path
+            \\    -sAll => saves the .o and exacutable file
+            \\    -c    => delets the exacutable generated and the .o file
+            \\Helpful commands:
+            \\    -v    => prints the version of the compiler 
+            \\
+        , .{});
         return;
     }
 }

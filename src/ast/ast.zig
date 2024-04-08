@@ -1,19 +1,36 @@
 const std = @import("std");
 
-const exprType = enum {
-    Number,
-    String,
-    Ident,
-    Binary,
-    Unary,
+pub const ExprKind = enum {
+    Err,
 };
 
-pub const Expr = union(exprType) {
-    Number: usize,
+pub const Expr = union(enum) {
+    Err: ExprKind,
+    Number: []const u8,
     String: []const u8,
     Ident: []const u8,
     Binary: BinaryExpr,
     Unary: UnaryExpr,
+
+    pub fn deinit(self: Expr, allocator: std.mem.Allocator) void {
+        switch (self) {
+            .Number => {},
+            .String => {},
+            .Ident => {},
+            .Binary => |bin| {
+                // Don't do anything with op
+                bin.left.deinit(allocator);
+                bin.right.deinit(allocator);
+
+                allocator.free(bin.left);
+                allocator.free(bin.right);
+            },
+            .Unary => |un| {
+                un.expr.deinit(allocator);
+                allocator.free(un.expr);
+            },
+        }
+    }
 };
 
 pub const BinaryExpr = struct {
@@ -35,7 +52,7 @@ fn printBinaryExpr(e: BinaryExpr) void {
     std.debug.print(")", .{});
 }
 
-pub fn printExpr(e: Expr) void {
+pub fn printExpr(e: *const Expr) void {
     switch (e) {
         .Number => {
             std.debug.print("{d}", .{e.Number});
@@ -53,6 +70,7 @@ pub fn printExpr(e: Expr) void {
             std.debug.print("{s}", .{e.Unary.op});
             printExpr(e.Unary.expr.*);
         },
+        else => unreachable,
     }
 }
 

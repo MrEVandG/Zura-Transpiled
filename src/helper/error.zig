@@ -73,7 +73,7 @@ pub fn Error(
     pos: usize,
     msg: []const u8,
     comptime typeOfError: []const u8,
-    filename: []u8,
+    filename: []const u8,
 ) !void {
     comptime var cham = Chameleon.init(.Auto);
 
