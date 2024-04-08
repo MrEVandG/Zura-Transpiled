@@ -49,11 +49,8 @@ pub fn get_binding_power(parser: *psr.Parser, tk: token.TokenType) binding_power
 
         break :blk map;
     };
-    var current = psr.current(parser);
-    if (bp_table.get(current.type) == null) {
-        parser.errors.append(
-            psr.Parser.Error{ ._tks = current, .msg = "TokenType not found in binding power table!" },
-        ) catch std.os.exit(10);
+    if (bp_table.get(tk) == null) {
+        psr.errorCheck(parser, "TokenType not found in the binding power table!");
         return binding_power.err;
     }
     return bp_table.get(tk).?;
@@ -77,11 +74,9 @@ pub fn nud_handler(parser: *psr.Parser, tk: token.TokenType) ast.Expr {
 
         break :blk map;
     };
-    var current = psr.current(parser);
+
     if (nud_lookup.get(tk) == null) {
-        parser.errors.append(
-            psr.Parser.Error{ ._tks = current, .msg = "TokenType not found in nud table!" },
-        ) catch std.os.exit(10);
+        psr.errorCheck(parser, "TokenType not found in the nud table!");
         return ast.Expr{ .Err = ast.ExprKind.Err };
     }
     return nud_lookup.get(tk).?(parser);
@@ -107,17 +102,17 @@ pub fn led_handler(parser: *psr.Parser, left: *ast.Expr) ast.Expr {
     };
 
     var op = psr.current(parser);
-    var value = get_binding_power(parser, psr.current(parser).type);
 
     if (led_lookup.get(op.type) == null) {
-        parser.errors.append(
-            psr.Parser.Error{ ._tks = op, .msg = "TokenType not found in led table!" },
-        ) catch std.os.exit(10);
+        psr.errorCheck(parser, "TokenType not found in the led table!");
+        std.debug.print("TokenType not found in led table!\n", .{});
         return ast.Expr{ .Err = ast.ExprKind.Err };
     }
+
+    var bp = get_binding_power(parser, psr.current(parser).type);
 
     if (parser.index + 1 < parser.tks.items.len)
         _ = psr.next(parser);
 
-    return led_lookup.get(op.type).?(parser, &left.*, op.value, &value);
+    return led_lookup.get(op.type).?(parser, &left.*, op.value, &bp);
 }

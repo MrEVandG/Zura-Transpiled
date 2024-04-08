@@ -44,23 +44,39 @@ pub fn prev(parser: *Parser) token.Token {
     return parser.tks.items[parser.index];
 }
 
-pub fn parse_expr(parser: *Parser, bp: prec.binding_power) ast.Expr {
-    var c_tok = current(parser);
-    var left = prec.nud_handler(parser, c_tok.type);
+pub fn errorCheck(parser: *Parser, msg: []const u8) void {
+    parser.errors.append(
+        Parser.Error{ .msg = msg, ._tks = current(parser) },
+    ) catch |_err| {
+        std.debug.print("Error: {}\n", .{_err});
+    };
+}
 
-    if (parser.errors.items.len > 0) {
+fn reportError(parser: *Parser, bp: prec.binding_power) void {
+    if (parser.errors.items.len > 0 or bp == prec.binding_power.err) {
         for (parser.errors.items) |_err| {
             var msg = _err.msg;
             err.Error(
                 _err._tks.line,
-                _err._tks.pos,
+                _err._tks.pos - 1,
                 msg,
                 "PARSER LOOKUP ERROR",
                 token.scanner.filename,
             ) catch unreachable;
         }
-        return left;
     }
+    if (parser.errors.items.len >= 5) {
+        std.debug.print("Too many errors, exiting...\n", .{});
+        std.os.exit(1);
+    }
+}
+
+pub fn parse_expr(parser: *Parser, bp: prec.binding_power) ast.Expr {
+    var c_tok = current(parser);
+    var left = prec.nud_handler(parser, c_tok.type);
+
+    // Check for error in the nud_handler
+    reportError(parser, bp);
 
     if (parser.index + 1 < parser.tks.items.len) {
         c_tok = next(parser);
@@ -68,11 +84,12 @@ pub fn parse_expr(parser: *Parser, bp: prec.binding_power) ast.Expr {
         return left;
     }
 
-    var value = @intFromEnum(prec.get_binding_power(parser, c_tok.type));
-    while (value > @intFromEnum(bp)) {
+    var new_bp = @intFromEnum(prec.get_binding_power(parser, c_tok.type));
+    while (new_bp > @intFromEnum(bp)) {
         left = prec.led_handler(parser, &left);
+        reportError(parser, @enumFromInt(new_bp)); // Check for error in the led_handler
         c_tok = current(parser);
-        value = @intFromEnum(prec.get_binding_power(parser, c_tok.type));
+        new_bp = @intFromEnum(prec.get_binding_power(parser, c_tok.type));
     }
 
     return left;
