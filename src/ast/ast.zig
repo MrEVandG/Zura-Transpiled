@@ -52,7 +52,7 @@ fn printBinaryExpr(e: BinaryExpr) void {
     std.debug.print(")", .{});
 }
 
-pub fn printExpr(e: *const Expr) void {
+pub fn printExpr(e: Expr) void {
     switch (e) {
         .Number => {
             std.debug.print("{d}", .{e.Number});

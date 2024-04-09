@@ -3,116 +3,101 @@ const std = @import("std");
 const token = @import("../lexer/tokens.zig");
 const err = @import("../helper/error.zig");
 const ast = @import("../ast/ast.zig");
-const psr = @import("./helper.zig");
+const psr = @import("helper.zig");
 const expr = @import("expr.zig");
 
-// based off of c operator precedence map
-// http://en.cppreference.com/w/c/language/operator_precedence
-pub const binding_power = enum(usize) {
+// The Zura bp table (binding power table) is based off of C's prec table
+// but in reverse. The higher the number, the higher the precedence.
+// https://en.cppreference.com/w/c/language/operator_precedence
+pub const bindingPower = enum(usize) {
     default = 0,
     comma = 1,
     assignment = 2,
     ternary = 3,
-    logical_or = 4,
-    logical_and = 5,
-    relational = 6, // == !=
-    compare = 7, // < > <= >=
-    additive = 8, // + -
-    multiplicative = 9, // * / %
-    power = 10, // **
-    prefix = 11, // ++ -- + - ! ~
-    postfix = 12, // ++ -- + - ! ~
-    call = 13, // () [] .
-    field = 14, // . ->
+    logicalOr = 4,
+    logicalAnd = 5,
+    relational = 6,
+    comparison = 7,
+    additive = 8,
+    multiplicative = 9,
+    power = 10,
+    prefix = 11,
+    postfix = 12,
+    call = 13,
+    field = 14,
     err = 15,
 };
 
-pub fn get_binding_power(parser: *psr.Parser, tk: token.TokenType) binding_power {
-    var bp_table = blk: {
-        var map = std.EnumMap(token.TokenType, binding_power){};
+var bp_table = blk: {
+    var map = std.EnumMap(token.TokenType, bindingPower){};
 
-        // Literals
-        map.put(token.TokenType.Num, binding_power.default);
-        map.put(token.TokenType.Ident, binding_power.default);
-        map.put(token.TokenType.String, binding_power.default);
+    // Literals
+    map.put(token.TokenType.Num, bindingPower.default);
+    map.put(token.TokenType.String, bindingPower.default);
+    map.put(token.TokenType.Ident, bindingPower.default);
 
-        // Binary operators
-        map.put(token.TokenType.plus, binding_power.additive);
-        map.put(token.TokenType.minus, binding_power.additive);
-        map.put(token.TokenType.star, binding_power.multiplicative);
-        map.put(token.TokenType.slash, binding_power.multiplicative);
-        map.put(token.TokenType.mod, binding_power.multiplicative);
+    // Operators
+    map.put(token.TokenType.plus, bindingPower.additive);
+    map.put(token.TokenType.minus, bindingPower.additive);
+    map.put(token.TokenType.star, bindingPower.multiplicative);
+    map.put(token.TokenType.slash, bindingPower.multiplicative);
 
-        // Unary operators
-        map.put(token.TokenType.not, binding_power.prefix);
-        map.put(token.TokenType.minus, binding_power.prefix);
+    break :blk map;
+};
 
-        break :blk map;
-    };
-    if (bp_table.get(tk) == null) {
-        psr.errorCheck(parser, "TokenType not found in the binding power table!");
-        return binding_power.err;
+var nud_table = blk: {
+    var map = std.EnumMap(token.TokenType, *const fn (*psr.Parser) ast.Expr){};
+
+    // Literals
+    map.put(token.TokenType.Num, expr.num);
+    map.put(token.TokenType.String, expr.string);
+    map.put(token.TokenType.Ident, expr.ident);
+
+    break :blk map;
+};
+
+var led_table = blk: {
+    var map = std.EnumMap(
+        token.TokenType,
+        *const fn (*psr.Parser, *ast.Expr, []const u8, *bindingPower) ast.Expr,
+    ){};
+
+    map.put(token.TokenType.plus, expr.binary);
+    map.put(token.TokenType.minus, expr.binary);
+    map.put(token.TokenType.star, expr.binary);
+    map.put(token.TokenType.slash, expr.binary);
+
+    break :blk map;
+};
+
+pub fn getBP(parser: *psr.Parser, tk: token.Token) bindingPower {
+    if (bp_table.get(tk.type) == null) {
+        psr.pushError(parser, "Current Token not find in bp table!");
+        return bindingPower.err;
     }
-    return bp_table.get(tk).?;
+    return bp_table.get(tk.type).?;
 }
 
-pub fn nud_handler(parser: *psr.Parser, tk: token.TokenType) ast.Expr {
-    var nud_lookup = blk: {
-        var map = std.EnumMap(
-            token.TokenType,
-            *const fn (*psr.Parser) ast.Expr,
-        ){};
-
-        // Literals
-        map.put(token.TokenType.Num, expr.parse_num);
-        map.put(token.TokenType.String, expr.parse_string);
-        map.put(token.TokenType.Ident, expr.parse_ident);
-
-        // Unary
-        map.put(token.TokenType.not, expr.parse_unary);
-        map.put(token.TokenType.minus, expr.parse_unary);
-
-        break :blk map;
-    };
-
-    if (nud_lookup.get(tk) == null) {
-        psr.errorCheck(parser, "TokenType not found in the nud table!");
+pub fn nudHandler(parser: *psr.Parser, tk: token.Token) ast.Expr {
+    if (nud_table.get(tk.type) == null) {
+        psr.pushError(parser, "Current Token not find in nud table!");
         return ast.Expr{ .Err = ast.ExprKind.Err };
     }
-    return nud_lookup.get(tk).?(parser);
+    return nud_table.get(tk.type).?(parser);
 }
 
-pub fn led_handler(parser: *psr.Parser, left: *ast.Expr) ast.Expr {
-    var led_lookup = blk: {
-        var map = std.EnumMap(token.TokenType, *const fn (
-            *psr.Parser,
-            *ast.Expr,
-            []const u8,
-            *binding_power,
-        ) ast.Expr){};
-
-        // Binary
-        map.put(token.TokenType.plus, expr.parse_binary);
-        map.put(token.TokenType.minus, expr.parse_binary);
-        map.put(token.TokenType.star, expr.parse_binary);
-        map.put(token.TokenType.slash, expr.parse_binary);
-        map.put(token.TokenType.mod, expr.parse_binary);
-
-        break :blk map;
-    };
-
+pub fn ledHandler(parser: *psr.Parser, left: *ast.Expr) ast.Expr {
     var op = psr.current(parser);
 
-    if (led_lookup.get(op.type) == null) {
-        psr.errorCheck(parser, "TokenType not found in the led table!");
-        std.debug.print("TokenType not found in led table!\n", .{});
+    if (led_table.get(op.type) == null) {
+        psr.pushError(parser, "Current Token not find in led table!");
         return ast.Expr{ .Err = ast.ExprKind.Err };
     }
 
-    var bp = get_binding_power(parser, psr.current(parser).type);
+    var bp = getBP(parser, op);
 
-    if (parser.index + 1 < parser.tks.items.len)
-        _ = psr.next(parser);
+    if (parser.idx + 1 < parser.tks.items.len)
+        _ = psr.advance(parser);
 
-    return led_lookup.get(op.type).?(parser, &left.*, op.value, &bp);
+    return led_table.get(op.type).?(parser, &left.*, op.value, &bp);
 }

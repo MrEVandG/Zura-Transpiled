@@ -1,95 +1,90 @@
 const std = @import("std");
-
-const prec = @import("prec.zig");
-const ast = @import("../ast/ast.zig");
 const token = @import("../lexer/tokens.zig");
-const lexer = @import("../lexer/lexer.zig");
 const err = @import("../helper/error.zig");
+const ast = @import("../ast/ast.zig");
+const prec = @import("prec.zig");
 
 pub const Parser = struct {
     tks: std.ArrayList(token.Token),
-    index: usize,
+    idx: usize,
 
     errors: std.ArrayList(Error),
     pub const Error = struct {
-        _tks: token.Token,
         msg: []const u8,
+        tokens: token.Token,
     };
 
-    pub fn init(allocator: std.mem.Allocator) Parser {
+    pub fn init(alloc: std.mem.Allocator) Parser {
         return Parser{
-            .tks = std.ArrayList(token.Token).init(allocator),
-            .errors = std.ArrayList(Error).init(allocator),
-            .index = 0,
+            .tks = std.ArrayList(token.Token).init(alloc),
+            .errors = std.ArrayList(Error).init(alloc),
+            .idx = 0,
         };
     }
 
     pub fn deinit(self: Parser) void {
-        self.tks.deinit();
         self.errors.deinit();
+        self.tks.deinit();
     }
 };
 
-pub fn current(parser: *Parser) token.Token {
-    return parser.tks.items[parser.index];
-}
-
-pub fn next(parser: *Parser) token.Token {
-    parser.index += 1;
-    return parser.tks.items[parser.index];
-}
-
-pub fn prev(parser: *Parser) token.Token {
-    parser.index -= 1;
-    return parser.tks.items[parser.index];
-}
-
-pub fn errorCheck(parser: *Parser, msg: []const u8) void {
-    parser.errors.append(
-        Parser.Error{ .msg = msg, ._tks = current(parser) },
-    ) catch |_err| {
-        std.debug.print("Error: {}\n", .{_err});
+pub fn pushError(psr: *Parser, msg: []const u8) void {
+    psr.errors.append(Parser.Error{ .msg = msg, .tokens = current(psr) }) catch {
+        std.debug.panic("Failed to push error to the error array", .{});
     };
 }
 
-fn reportError(parser: *Parser, bp: prec.binding_power) void {
-    if (parser.errors.items.len > 0 or bp == prec.binding_power.err) {
-        for (parser.errors.items) |_err| {
-            var msg = _err.msg;
+pub fn reportErrors(psr: *Parser, bp: prec.bindingPower) void {
+    if (psr.errors.items.len > 0 or bp == prec.bindingPower.err) {
+        for (psr.errors.items) |e| {
             err.Error(
-                _err._tks.line,
-                _err._tks.pos - 1,
-                msg,
+                e.tokens.line,
+                e.tokens.pos - 1,
+                e.msg,
                 "PARSER LOOKUP ERROR",
                 token.scanner.filename,
-            ) catch unreachable;
+            ) catch {
+                std.debug.panic("Failed to report error", .{});
+            };
         }
-    }
-    if (parser.errors.items.len >= 5) {
-        std.debug.print("Too many errors, exiting...\n", .{});
-        std.os.exit(1);
+
+        if (psr.errors.items.len >= 5) {
+            std.debug.panic("Too many errors", .{});
+        }
     }
 }
 
-pub fn parse_expr(parser: *Parser, bp: prec.binding_power) ast.Expr {
+pub fn current(psr: *Parser) token.Token {
+    return psr.tks.items[psr.idx];
+}
+
+pub fn advance(psr: *Parser) token.Token {
+    psr.idx += 1;
+    return current(psr);
+}
+
+pub fn parseExpr(parser: *Parser, bp: prec.bindingPower) ast.Expr {
     var c_tok = current(parser);
-    var left = prec.nud_handler(parser, c_tok.type);
+    var left = prec.nudHandler(parser, c_tok);
 
-    // Check for error in the nud_handler
-    reportError(parser, bp);
+    // Check for an error in the nudHandler
+    reportErrors(parser, bp);
 
-    if (parser.index + 1 < parser.tks.items.len) {
-        c_tok = next(parser);
+    if (parser.idx + 1 < parser.tks.items.len) {
+        c_tok = advance(parser);
     } else {
         return left;
     }
 
-    var new_bp = @intFromEnum(prec.get_binding_power(parser, c_tok.type));
-    while (new_bp > @intFromEnum(bp)) {
-        left = prec.led_handler(parser, &left);
-        reportError(parser, @enumFromInt(new_bp)); // Check for error in the led_handler
+    var newBP = @intFromEnum(prec.getBP(parser, c_tok));
+
+    std.debug.print("newBp: {any} > bp: {any}\n", .{ newBP, bp });
+
+    while (newBP > @intFromEnum(bp)) {
+        left = prec.ledHandler(parser, &left);
+        reportErrors(parser, @enumFromInt(newBP));
         c_tok = current(parser);
-        new_bp = @intFromEnum(prec.get_binding_power(parser, c_tok.type));
+        newBP = @intFromEnum(prec.getBP(parser, c_tok));
     }
 
     return left;
