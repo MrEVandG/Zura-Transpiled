@@ -1,77 +1,49 @@
 const std = @import("std");
 
 pub const ExprKind = enum {
-    Err,
+    String,
+    Ident,
+    Number,
+    Float,
+    Binary,
 };
 
-pub const Expr = union(enum) {
-    Err: ExprKind,
+pub const Expr = union(ExprKind) {
     Number: []const u8,
+    Float: []const u8,
     String: []const u8,
     Ident: []const u8,
-    Binary: BinaryExpr,
-    Unary: UnaryExpr,
+    Binary: struct {
+        op: []const u8,
+        left: *Expr,
+        right: *Expr,
+    },
 
-    pub fn deinit(self: Expr, allocator: std.mem.Allocator) void {
-        switch (self) {
-            .Number => {},
-            .String => {},
-            .Ident => {},
-            .Binary => |bin| {
-                // Don't do anything with op
-                bin.left.deinit(allocator);
-                bin.right.deinit(allocator);
-
-                allocator.free(bin.left);
-                allocator.free(bin.right);
+    pub fn print(self: *Expr) void {
+        switch (self.*) {
+            .Number => |value| {
+                std.debug.print("{s}", .{value});
             },
-            .Unary => |un| {
-                un.expr.deinit(allocator);
-                allocator.free(un.expr);
+            .Float => |value| {
+                std.debug.print("{s}", .{value});
+            },
+            .String => |value| {
+                std.debug.print("{s}", .{value});
+            },
+            .Ident => |value| {
+                std.debug.print("{s}", .{value});
+            },
+            .Binary => |value| {
+                if (value.left == self) {
+                    std.debug.panic("so it was self-referencing!\n", .{});
+                }
+
+                std.debug.print("(", .{});
+                print(value.left);
+                std.debug.print("{s}", .{value.op});
+                print(value.right);
+                std.debug.print(")", .{});
             },
         }
     }
 };
-
-pub const BinaryExpr = struct {
-    op: []const u8,
-    left: *Expr,
-    right: *Expr,
-};
-
-pub const UnaryExpr = struct {
-    op: []const u8,
-    expr: *Expr,
-};
-
-fn printBinaryExpr(e: BinaryExpr) void {
-    std.debug.print("(", .{});
-    printExpr(e.left.*);
-    std.debug.print(" {s} ", .{e.op});
-    printExpr(e.right.*);
-    std.debug.print(")", .{});
-}
-
-pub fn printExpr(e: Expr) void {
-    switch (e) {
-        .Number => {
-            std.debug.print("{d}", .{e.Number});
-        },
-        .String => {
-            std.debug.print("{s}", .{e.String});
-        },
-        .Ident => {
-            std.debug.print("{s}", .{e.Ident});
-        },
-        .Binary => {
-            printBinaryExpr(e.Binary);
-        },
-        .Unary => {
-            std.debug.print("{s}", .{e.Unary.op});
-            printExpr(e.Unary.expr.*);
-        },
-        else => unreachable,
-    }
-}
-
-pub var expr: Expr = undefined;

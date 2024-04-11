@@ -5,15 +5,19 @@ const prec = @import("prec.zig");
 const psr = @import("helper.zig");
 
 pub fn num(parser: *psr.Parser) ast.Expr {
-    return ast.Expr{ .Number = psr.current(parser).value };
+    return .{ .Number = psr.current(parser).value };
+}
+
+pub fn float(parser: *psr.Parser) ast.Expr {
+    return .{ .Float = psr.current(parser).value };
 }
 
 pub fn string(parser: *psr.Parser) ast.Expr {
-    return ast.Expr{ .String = psr.current(parser).value };
+    return .{ .String = psr.current(parser).value };
 }
 
 pub fn ident(parser: *psr.Parser) ast.Expr {
-    return ast.Expr{ .Ident = psr.current(parser).value };
+    return .{ .Ident = psr.current(parser).value };
 }
 
 pub fn binary(
@@ -24,11 +28,13 @@ pub fn binary(
 ) ast.Expr {
     var right = psr.parseExpr(parser, bp.*);
 
-    std.debug.print("Left: {any}\n Rigth: {any}\n Op: {s}", .{ left, right, op });
+    std.debug.print("Left: {any}\nRigth: {any}\n Op: {s}\n", .{ left, right, op });
 
-    return ast.Expr{ .Binary = ast.BinaryExpr{
-        .op = op,
-        .left = left,
-        .right = &right,
-    } };
+    return .{
+        .Binary = .{
+            .op = op,
+            .left = left,
+            .right = &right,
+        },
+    };
 }

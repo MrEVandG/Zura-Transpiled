@@ -33,6 +33,7 @@ var bp_table = blk: {
 
     // Literals
     map.put(token.TokenType.Num, bindingPower.default);
+    map.put(token.TokenType.Float, bindingPower.default);
     map.put(token.TokenType.String, bindingPower.default);
     map.put(token.TokenType.Ident, bindingPower.default);
 
@@ -50,6 +51,7 @@ var nud_table = blk: {
 
     // Literals
     map.put(token.TokenType.Num, expr.num);
+    map.put(token.TokenType.Float, expr.float);
     map.put(token.TokenType.String, expr.string);
     map.put(token.TokenType.Ident, expr.ident);
 
@@ -71,33 +73,34 @@ var led_table = blk: {
 };
 
 pub fn getBP(parser: *psr.Parser, tk: token.Token) bindingPower {
-    if (bp_table.get(tk.type) == null) {
-        psr.pushError(parser, "Current Token not find in bp table!");
-        return bindingPower.err;
-    }
+    _ = parser;
+    // if (bp_table.get(tk.type) == null) {
+    //     psr.pushError(parser, "Current Token not find in bp table!");
+    //     return bindingPower.err;
+    // }
     return bp_table.get(tk.type).?;
 }
 
 pub fn nudHandler(parser: *psr.Parser, tk: token.Token) ast.Expr {
-    if (nud_table.get(tk.type) == null) {
-        psr.pushError(parser, "Current Token not find in nud table!");
-        return ast.Expr{ .Err = ast.ExprKind.Err };
-    }
+    // if (nud_table.get(tk.type) == null) {
+    //     psr.pushError(parser, "Current Token not find in nud table!");
+    //     return ast.Expr{ .Err = ast.ExprKind.Err };
+    // }
     return nud_table.get(tk.type).?(parser);
 }
 
 pub fn ledHandler(parser: *psr.Parser, left: *ast.Expr) ast.Expr {
     var op = psr.current(parser);
 
-    if (led_table.get(op.type) == null) {
-        psr.pushError(parser, "Current Token not find in led table!");
-        return ast.Expr{ .Err = ast.ExprKind.Err };
-    }
+    // if (led_table.get(op.type) == null) {
+    //     psr.pushError(parser, "Current Token not find in led table!");
+    //     return ast.Expr{ .Err = ast.ExprKind.Err };
+    // }
 
     var bp = getBP(parser, op);
 
     if (parser.idx + 1 < parser.tks.items.len)
         _ = psr.advance(parser);
 
-    return led_table.get(op.type).?(parser, &left.*, op.value, &bp);
+    return led_table.get(op.type).?(parser, left, op.value, &bp);
 }

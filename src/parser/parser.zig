@@ -21,5 +21,5 @@ pub fn parse(alloc: std.mem.Allocator) !void {
     try storeToken(&parser, token.token);
 
     var res = h.parseExpr(&parser, prec.bindingPower.default);
-    _ = res;
+    ast.Expr.print(&res);
 }

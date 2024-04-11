@@ -68,7 +68,7 @@ pub fn parseExpr(parser: *Parser, bp: prec.bindingPower) ast.Expr {
     var left = prec.nudHandler(parser, c_tok);
 
     // Check for an error in the nudHandler
-    reportErrors(parser, bp);
+    // reportErrors(parser, bp);
 
     if (parser.idx + 1 < parser.tks.items.len) {
         c_tok = advance(parser);
@@ -82,7 +82,7 @@ pub fn parseExpr(parser: *Parser, bp: prec.bindingPower) ast.Expr {
 
     while (newBP > @intFromEnum(bp)) {
         left = prec.ledHandler(parser, &left);
-        reportErrors(parser, @enumFromInt(newBP));
+        // reportErrors(parser, @enumFromInt(newBP));
         c_tok = current(parser);
         newBP = @intFromEnum(prec.getBP(parser, c_tok));
     }
