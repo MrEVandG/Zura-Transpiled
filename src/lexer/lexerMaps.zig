@@ -50,6 +50,7 @@ pub fn sCharLookUp(schar: u8) ?tokens.TokenType {
         .{ ";", tokens.TokenType.semicolon },
         .{ ":", tokens.TokenType.colon },
         .{ "=", tokens.TokenType.equal },
+        .{ "!", tokens.TokenType.not },
         .{ ".", tokens.TokenType.dot },
     });
     // Casting the u8 to a string of 1 to use it as a key

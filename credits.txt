@@ -1,0 +1,7 @@
+=== Main Zura Developers ===
+@Spiced => https://github.com/NoubarKassabian
+
+=== Contributors ===
+@Travis from the Zig Discord Server
+@Fri3dNStuff from the Zig Discord Server and Cabbage Patch Dev Lounge
+
