@@ -11,6 +11,13 @@ pub const Expr = union(enum) {
         left: *Expr,
         right: *Expr,
     },
+    Unary: struct {
+        op: []const u8,
+        right: *Expr,
+    },
+    Group: struct {
+        body: *Expr,
+    },
 
     pub fn format(
         self: Expr,
@@ -28,6 +35,12 @@ pub const Expr = union(enum) {
             .Binary => |value| {
                 try writer.print("({} {s} {})", .{ value.left.*, value.op, value.right.* });
             },
+            .Unary => |value| {
+                try writer.print("({s}{})", .{ value.op, value.right.* });
+            },
+            .Group => |value| {
+                try writer.print("({})", .{value.body.*});
+            },
         }
     }
 
@@ -37,6 +50,12 @@ pub const Expr = union(enum) {
             .Binary => |value| {
                 value.left.deinit(alloc);
                 value.right.deinit(alloc);
+            },
+            .Unary => |value| {
+                value.right.deinit(alloc);
+            },
+            .Group => |value| {
+                value.body.deinit(alloc);
             },
         }
         alloc.destroy(self);

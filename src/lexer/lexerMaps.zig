@@ -50,6 +50,8 @@ pub fn sCharLookUp(schar: u8) ?tokens.TokenType {
         .{ ";", tokens.TokenType.semicolon },
         .{ ":", tokens.TokenType.colon },
         .{ "=", tokens.TokenType.equal },
+        .{ "<", tokens.TokenType.lt },
+        .{ ">", tokens.TokenType.gt },
         .{ "!", tokens.TokenType.not },
         .{ ".", tokens.TokenType.dot },
     });

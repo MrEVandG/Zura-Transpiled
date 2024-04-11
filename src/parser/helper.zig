@@ -66,10 +66,12 @@ pub fn advance(psr: *Parser) token.Token {
 
 pub fn expect(psr: *Parser, tk: token.TokenType) token.Token {
     var c_tok = current(psr);
+    std.debug.print("Expected token: {any} Got: {any}", .{ tk, c_tok.type });
     if (c_tok.type != tk) {
         pushError(psr, "Expected token");
     }
 
+    std.debug.print("Token: {any}\n", .{advance(psr).type});
     return advance(psr);
 }
 

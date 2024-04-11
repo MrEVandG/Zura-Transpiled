@@ -11,6 +11,8 @@ pub const TokenType = enum {
     colon,
     equal,
     dot,
+    lt,
+    gt,
 
     // Double Characters
     Walrus,
