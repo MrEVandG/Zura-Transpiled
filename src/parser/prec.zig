@@ -61,7 +61,7 @@ var nud_table = blk: {
 var led_table = blk: {
     var map = std.EnumMap(
         token.TokenType,
-        *const fn (*psr.Parser, *ast.Expr, []const u8, *bindingPower, std.mem.Allocator) error{OutOfMemory}!*ast.Expr,
+        *const fn (*psr.Parser, *ast.Expr, []const u8, bindingPower, std.mem.Allocator) error{OutOfMemory}!*ast.Expr,
     ){};
 
     map.put(token.TokenType.plus, expr.binary);
@@ -73,34 +73,39 @@ var led_table = blk: {
 };
 
 pub fn getBP(parser: *psr.Parser, tk: token.Token) bindingPower {
-    _ = parser;
-    // if (bp_table.get(tk.type) == null) {
-    //     psr.pushError(parser, "Current Token not find in bp table!");
-    //     return bindingPower.err;
-    // }
+    if (bp_table.get(tk.type) == null) {
+        psr.pushError(parser, "Current Token not find in bp table!");
+        return bindingPower.err;
+    }
     return bp_table.get(tk.type).?;
 }
 
 pub fn nudHandler(alloc: std.mem.Allocator, parser: *psr.Parser, tk: token.Token) !*ast.Expr {
-    // if (nud_table.get(tk.type) == null) {
-    //     psr.pushError(parser, "Current Token not find in nud table!");
-    //     return ast.Expr{ .Err = ast.ExprKind.Err };
-    // }
+    if (nud_table.get(tk.type) == null) {
+        psr.pushError(parser, "Current Token not find in nud table!");
+
+        const _expr = try alloc.create(ast.Expr);
+        _expr.* = .{ .Error = "Current Token not find in nud table!" };
+        return _expr;
+    }
     return nud_table.get(tk.type).?(parser, alloc);
 }
 
 pub fn ledHandler(alloc: std.mem.Allocator, parser: *psr.Parser, left: *ast.Expr) !*ast.Expr {
     var op = psr.current(parser);
 
-    // if (led_table.get(op.type) == null) {
-    //     psr.pushError(parser, "Current Token not find in led table!");
-    //     return ast.Expr{ .Err = ast.ExprKind.Err };
-    // }
+    if (led_table.get(op.type) == null) {
+        psr.pushError(parser, "Current Token not find in led table!");
+
+        const _expr = try alloc.create(ast.Expr);
+        _expr.* = .{ .Error = "Current Token not find in led table!" };
+        return _expr;
+    }
 
     var bp = getBP(parser, op);
 
     if (parser.idx + 1 < parser.tks.items.len)
         _ = psr.advance(parser);
 
-    return led_table.get(op.type).?(parser, left, op.value, &bp, alloc);
+    return led_table.get(op.type).?(parser, left, op.value, bp, alloc);
 }

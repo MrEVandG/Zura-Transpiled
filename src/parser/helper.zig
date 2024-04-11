@@ -49,7 +49,8 @@ pub fn reportErrors(psr: *Parser, bp: prec.bindingPower) void {
         }
 
         if (psr.errors.items.len >= 5) {
-            std.debug.panic("Too many errors", .{});
+            std.debug.print("Too many errors!\n", .{});
+            std.os.exit(1);
         }
     }
 }
@@ -63,14 +64,20 @@ pub fn advance(psr: *Parser) token.Token {
     return current(psr);
 }
 
+pub fn expect(psr: *Parser, tk: token.TokenType) token.Token {
+    var c_tok = current(psr);
+    if (c_tok.type != tk) {
+        pushError(psr, "Expected token");
+    }
+
+    return advance(psr);
+}
+
 pub fn parseExpr(alloc: std.mem.Allocator, parser: *Parser, bp: prec.bindingPower) !*ast.Expr {
     var c_tok = current(parser);
     var left = try prec.nudHandler(alloc, parser, c_tok);
 
-    // std.debug.print("{}\n", .{left});
-
-    // Check for an error in the nudHandler
-    // reportErrors(parser, bp);
+    reportErrors(parser, bp);
 
     if (parser.idx + 1 < parser.tks.items.len) {
         c_tok = advance(parser);
@@ -78,15 +85,10 @@ pub fn parseExpr(alloc: std.mem.Allocator, parser: *Parser, bp: prec.bindingPowe
         return left;
     }
 
-    var newBP = @intFromEnum(prec.getBP(parser, c_tok));
-
-    std.debug.print("newBp: {any} > bp: {any}\n", .{ newBP, bp });
-
-    while (newBP > @intFromEnum(bp)) {
+    while (@intFromEnum(prec.getBP(parser, c_tok)) > @intFromEnum(bp)) {
         left = try prec.ledHandler(alloc, parser, left);
-        // reportErrors(parser, @enumFromInt(newBP));
+        reportErrors(parser, bp);
         c_tok = current(parser);
-        newBP = @intFromEnum(prec.getBP(parser, c_tok));
     }
 
     return left;

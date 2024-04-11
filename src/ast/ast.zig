@@ -1,14 +1,7 @@
 const std = @import("std");
 
-pub const ExprKind = enum {
-    String,
-    Ident,
-    Number,
-    Float,
-    Binary,
-};
-
-pub const Expr = union(ExprKind) {
+pub const Expr = union(enum) {
+    Error: []const u8,
     Number: []const u8,
     Float: []const u8,
     String: []const u8,
@@ -29,11 +22,10 @@ pub const Expr = union(ExprKind) {
         _ = options;
 
         switch (self) {
-            .Number, .Float, .String, .Ident => |value| {
+            .Number, .Float, .String, .Ident, .Error => |value| {
                 try writer.print("{s}", .{value});
             },
             .Binary => |value| {
-                if (value.left == value.left.Binary.left) std.debug.panic("value.left == value! YOU FUCKED UP!", .{});
                 try writer.print("({} {s} {})", .{ value.left.*, value.op, value.right.* });
             },
         }
@@ -41,7 +33,7 @@ pub const Expr = union(ExprKind) {
 
     pub fn deinit(self: *const Expr, alloc: std.mem.Allocator) void {
         switch (self.*) {
-            .Number, .Float, .String, .Ident => {},
+            .Number, .Float, .String, .Ident, .Error => {},
             .Binary => |value| {
                 value.left.deinit(alloc);
                 value.right.deinit(alloc);
@@ -50,3 +42,6 @@ pub const Expr = union(ExprKind) {
         alloc.destroy(self);
     }
 };
+
+// TODO: Add in Stmt
+pub const Stmt = union(enum) {};

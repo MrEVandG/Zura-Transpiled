@@ -3,6 +3,7 @@ const std = @import("std");
 const ast = @import("../ast/ast.zig");
 const prec = @import("prec.zig");
 const psr = @import("helper.zig");
+const tkn = @import("../lexer/tokens.zig");
 
 /// Caller own returns to memory
 pub fn num(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!*ast.Expr {
@@ -33,12 +34,10 @@ pub fn binary(
     parser: *psr.Parser,
     left: *ast.Expr,
     op: []const u8,
-    bp: *prec.bindingPower,
+    bp: prec.bindingPower,
     alloc: std.mem.Allocator,
 ) error{OutOfMemory}!*ast.Expr {
-    var right = try psr.parseExpr(alloc, parser, bp.*);
-
-    std.debug.print("Left: {any}\nRigth: {any}\n Op: {s}\n", .{ left, right, op });
+    var right = try psr.parseExpr(alloc, parser, bp);
 
     const expr = try alloc.create(ast.Expr);
     expr.* = .{ .Binary = .{ .op = op, .left = left, .right = right } };

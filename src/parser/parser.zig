@@ -22,4 +22,5 @@ pub fn parse(alloc: std.mem.Allocator) !void {
 
     var res = try h.parseExpr(alloc, &parser, prec.bindingPower.default);
     std.debug.print("Result: {}\n", .{res});
+    res.deinit(alloc);
 }
