@@ -47,7 +47,7 @@ var bp_table = blk: {
 };
 
 var nud_table = blk: {
-    var map = std.EnumMap(token.TokenType, *const fn (*psr.Parser) ast.Expr){};
+    var map = std.EnumMap(token.TokenType, *const fn (*psr.Parser, std.mem.Allocator) error{OutOfMemory}!*ast.Expr){};
 
     // Literals
     map.put(token.TokenType.Num, expr.num);
@@ -61,7 +61,7 @@ var nud_table = blk: {
 var led_table = blk: {
     var map = std.EnumMap(
         token.TokenType,
-        *const fn (*psr.Parser, *ast.Expr, []const u8, *bindingPower) ast.Expr,
+        *const fn (*psr.Parser, *ast.Expr, []const u8, *bindingPower, std.mem.Allocator) error{OutOfMemory}!*ast.Expr,
     ){};
 
     map.put(token.TokenType.plus, expr.binary);
@@ -81,15 +81,15 @@ pub fn getBP(parser: *psr.Parser, tk: token.Token) bindingPower {
     return bp_table.get(tk.type).?;
 }
 
-pub fn nudHandler(parser: *psr.Parser, tk: token.Token) ast.Expr {
+pub fn nudHandler(alloc: std.mem.Allocator, parser: *psr.Parser, tk: token.Token) !*ast.Expr {
     // if (nud_table.get(tk.type) == null) {
     //     psr.pushError(parser, "Current Token not find in nud table!");
     //     return ast.Expr{ .Err = ast.ExprKind.Err };
     // }
-    return nud_table.get(tk.type).?(parser);
+    return nud_table.get(tk.type).?(parser, alloc);
 }
 
-pub fn ledHandler(parser: *psr.Parser, left: *ast.Expr) ast.Expr {
+pub fn ledHandler(alloc: std.mem.Allocator, parser: *psr.Parser, left: *ast.Expr) !*ast.Expr {
     var op = psr.current(parser);
 
     // if (led_table.get(op.type) == null) {
@@ -102,5 +102,5 @@ pub fn ledHandler(parser: *psr.Parser, left: *ast.Expr) ast.Expr {
     if (parser.idx + 1 < parser.tks.items.len)
         _ = psr.advance(parser);
 
-    return led_table.get(op.type).?(parser, left, op.value, &bp);
+    return led_table.get(op.type).?(parser, left, op.value, &bp, alloc);
 }

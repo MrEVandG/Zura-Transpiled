@@ -19,31 +19,34 @@ pub const Expr = union(ExprKind) {
         right: *Expr,
     },
 
-    pub fn print(self: *Expr) void {
-        switch (self.*) {
-            .Number => |value| {
-                std.debug.print("{s}", .{value});
-            },
-            .Float => |value| {
-                std.debug.print("{s}", .{value});
-            },
-            .String => |value| {
-                std.debug.print("{s}", .{value});
-            },
-            .Ident => |value| {
-                std.debug.print("{s}", .{value});
+    pub fn format(
+        self: Expr,
+        comptime fmt: []const u8,
+        options: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = fmt;
+        _ = options;
+
+        switch (self) {
+            .Number, .Float, .String, .Ident => |value| {
+                try writer.print("{s}", .{value});
             },
             .Binary => |value| {
-                if (value.left == self) {
-                    std.debug.panic("so it was self-referencing!\n", .{});
-                }
-
-                std.debug.print("(", .{});
-                print(value.left);
-                std.debug.print("{s}", .{value.op});
-                print(value.right);
-                std.debug.print(")", .{});
+                if (value.left == value.left.Binary.left) std.debug.panic("value.left == value! YOU FUCKED UP!", .{});
+                try writer.print("({} {s} {})", .{ value.left.*, value.op, value.right.* });
             },
         }
+    }
+
+    pub fn deinit(self: *const Expr, alloc: std.mem.Allocator) void {
+        switch (self.*) {
+            .Number, .Float, .String, .Ident => {},
+            .Binary => |value| {
+                value.left.deinit(alloc);
+                value.right.deinit(alloc);
+            },
+        }
+        alloc.destroy(self);
     }
 };

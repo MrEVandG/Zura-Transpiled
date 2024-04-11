@@ -63,9 +63,11 @@ pub fn advance(psr: *Parser) token.Token {
     return current(psr);
 }
 
-pub fn parseExpr(parser: *Parser, bp: prec.bindingPower) ast.Expr {
+pub fn parseExpr(alloc: std.mem.Allocator, parser: *Parser, bp: prec.bindingPower) !*ast.Expr {
     var c_tok = current(parser);
-    var left = prec.nudHandler(parser, c_tok);
+    var left = try prec.nudHandler(alloc, parser, c_tok);
+
+    // std.debug.print("{}\n", .{left});
 
     // Check for an error in the nudHandler
     // reportErrors(parser, bp);
@@ -81,7 +83,7 @@ pub fn parseExpr(parser: *Parser, bp: prec.bindingPower) ast.Expr {
     std.debug.print("newBp: {any} > bp: {any}\n", .{ newBP, bp });
 
     while (newBP > @intFromEnum(bp)) {
-        left = prec.ledHandler(parser, &left);
+        left = try prec.ledHandler(alloc, parser, left);
         // reportErrors(parser, @enumFromInt(newBP));
         c_tok = current(parser);
         newBP = @intFromEnum(prec.getBP(parser, c_tok));
