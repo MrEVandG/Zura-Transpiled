@@ -7,9 +7,9 @@ const ast = @import("../ast/ast.zig");
 const psr = @import("helper.zig");
 const expr = @import("expr.zig");
 
-// The Zura bp table (binding power table) is based off of C's prec table
-// but in reverse. The higher the number, the higher the precedence.
-// https://en.cppreference.com/w/c/language/operator_precedence
+/// The Zura bp table (binding power table) is based off of C's prec table
+/// but in reverse. The higher the number, the higher the precedence.
+/// https://en.cppreference.com/w/c/language/operator_precedence
 pub const bindingPower = enum(usize) {
     default = 0,
     comma = 1,
@@ -29,6 +29,9 @@ pub const bindingPower = enum(usize) {
     err = 15,
 };
 
+/// The getBp function looks at the bt table map, which is a map of token types and their
+/// respective binding powers. If the token type is not found in the map, it will return an error.
+/// if we do find the token type, we return the binding power. For the parser to use when parsing.
 pub fn getBP(parser: *psr.Parser, tk: token.Token) bindingPower {
     if (lu.bp_table.get(tk.type) == null) {
         psr.pushError(parser, "Current Token not find in bp table!");
@@ -37,6 +40,8 @@ pub fn getBP(parser: *psr.Parser, tk: token.Token) bindingPower {
     return lu.bp_table.get(tk.type).?;
 }
 
+/// The getUnary function is the same idea as the getBP function, but instead of returning
+/// the binding power, it returns the unary binding power. This is used for prefix operators.
 pub fn getUnary(parser: *psr.Parser, tk: token.Token) bindingPower {
     if (lu.prefix_table.get(tk.type) == null) {
         psr.pushError(parser, "Current Token not find in unary table!");
@@ -45,6 +50,11 @@ pub fn getUnary(parser: *psr.Parser, tk: token.Token) bindingPower {
     return lu.prefix_table.get(tk.type).?;
 }
 
+/// When writing a Pratt parser you will run into this term called "nud" which stands for
+/// "null denotation". This is the function that is called when the token is the first token
+/// in the expression. This function is responsible for parsing the token and returning an
+/// expression. If the token is not found in the lookup table, it will return an error.
+/// An example of this is when you have a unary operator like "-" in the expression "-1".
 pub fn nudHandler(alloc: std.mem.Allocator, parser: *psr.Parser, tk: token.Token) !*ast.Expr {
     if (lu.nud_table.get(tk.type) == null) {
         psr.pushError(parser, "Current Token not find in nud table!");
@@ -56,6 +66,11 @@ pub fn nudHandler(alloc: std.mem.Allocator, parser: *psr.Parser, tk: token.Token
     return lu.nud_table.get(tk.type).?(parser, alloc);
 }
 
+/// When writing a Pratt parser you will run into this term called "led" which stands for
+/// "left denotation". This is the function that is called when the token is not the first token
+/// in the expression. This function is responsible for parsing the token and returning an
+/// expression. If the token is not found in the lookup table, it will return an error.
+/// An example of this is when you have a binary operator like "+" in the expression "1 + 1".
 pub fn ledHandler(alloc: std.mem.Allocator, parser: *psr.Parser, left: *ast.Expr) !*ast.Expr {
     var op = psr.current(parser);
 

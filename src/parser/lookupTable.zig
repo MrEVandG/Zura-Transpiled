@@ -6,6 +6,8 @@ const psr = @import("helper.zig");
 const prec = @import("prec.zig");
 const expr = @import("expr.zig");
 
+/// The bp_table is a table of binding powers for each token type.
+/// This is used in parse expr to determine the precedence of the current token.
 pub var bp_table = blk: {
     var map = std.EnumMap(token.TokenType, prec.bindingPower){};
 
@@ -39,6 +41,7 @@ pub var bp_table = blk: {
     break :blk map;
 };
 
+/// The prefix_table is a table of prefix operators. Example "!" or "-".
 pub var prefix_table = blk: {
     var map = std.EnumMap(token.TokenType, prec.bindingPower){};
 
@@ -49,6 +52,10 @@ pub var prefix_table = blk: {
     break :blk map;
 };
 
+/// The nud table is called at the start of parsing when we just have
+/// a token that has no left hand side. This is used to parse literals
+/// and prefix operators. This map specifically maps token types to
+/// there respective functions so we have a nice clean way to parse them.
 pub var nud_table = blk: {
     var map = std.EnumMap(
         token.TokenType,
@@ -71,6 +78,11 @@ pub var nud_table = blk: {
     break :blk map;
 };
 
+/// The led table is called when we have a token that has a left hand side.
+/// This is used to parse binary operators and other infix operators.
+/// This map specifically maps token types to a function that takes in the bp of the
+/// current token and the left hand side of the token. This is used to parse the right
+/// and return to an ast node.
 pub var led_table = blk: {
     var map = std.EnumMap(
         token.TokenType,
