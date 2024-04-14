@@ -8,6 +8,12 @@ EXE_NAME="zura"
 OBJ_NAME="zura.o"
 OBJ_PATH="obj"
 
+# ANSI escape codes for colors
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
 # Helper Functions
 print_progress_bar() {
     local iteration=$1
@@ -24,7 +30,7 @@ print_progress_bar() {
     bar=${bar// /"${fill}"}
     local spaces=$(printf "%-$((length-filled_length))s")
 
-    echo -e "\r${prefix} [${bar}${spaces}] ${percent}% ${suffix}"
+    echo -e "\r${prefix} [${GREEN}${bar}${NC}${spaces}] ${percent}% ${suffix}"
 }
 
 generate_object_file() {
@@ -50,7 +56,7 @@ linux() {
     # Compile each source file to object files
     for file in $SOURCE_FILES; do
         current_file=$((current_file + 1))
-        print_progress_bar "$current_file" "$total_files" "Building zura" "($file)" 0 30 "#"
+        print_progress_bar "$current_file" "$total_files" "Building zura" "(${RED}$file${NC})" 0 30 "#"
         generate_object_file "$file" 
     done
 
@@ -72,4 +78,3 @@ else
     echo "Usage: $0 [clean | linux ]"
     exit 1
 fi
-
