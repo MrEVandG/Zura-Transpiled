@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const ast = @import("../ast/ast.zig");
+const ast = @import("../ast/expr.zig");
 const prec = @import("prec.zig");
 const psr = @import("helper.zig");
 const tkn = @import("../lexer/tokens.zig");

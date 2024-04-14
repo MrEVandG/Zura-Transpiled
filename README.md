@@ -30,6 +30,14 @@ Run the following commands:
 zig build-exe src/main.zig --name zura
 ```
 
+Or you can run the following command:
+This will creat obj files and then link them to create the zura executable.
+All of the obj files will be stored in the `obj` directory.
+```bash
+chmod a+x build.sh 
+./build.sh linux
+```
+
 This will create a `zura` executable in the `src` directory.
 
 Or you can download the latest release from [here](https://github.com/TheDevConnor/Zura-Transpiled/releases/tag/pre-release) and add either the `zura.exe` (For Windows) or `zura` (For Linux) executable to your path.

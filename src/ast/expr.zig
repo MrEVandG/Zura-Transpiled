@@ -61,6 +61,3 @@ pub const Expr = union(enum) {
         alloc.destroy(self);
     }
 };
-
-// TODO: Add in Stmt
-pub const Stmt = union(enum) {};

@@ -1,7 +1,7 @@
 const std = @import("std");
 const token = @import("../lexer/tokens.zig");
 const err = @import("../helper/error.zig");
-const ast = @import("../ast/ast.zig");
+const ast = @import("../ast/expr.zig");
 const prec = @import("prec.zig");
 
 pub const Parser = struct {

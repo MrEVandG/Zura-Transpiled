@@ -3,7 +3,7 @@ const std = @import("std");
 const token = @import("../lexer/tokens.zig");
 const err = @import("../helper/error.zig");
 const lu = @import("lookupTable.zig");
-const ast = @import("../ast/ast.zig");
+const ast = @import("../ast/expr.zig");
 const psr = @import("helper.zig");
 const expr = @import("expr.zig");
 

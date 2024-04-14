@@ -2,7 +2,7 @@ const std = @import("std");
 
 const token = @import("../lexer/tokens.zig");
 const lexer = @import("../lexer/lexer.zig");
-const ast = @import("../ast/ast.zig");
+const ast = @import("../ast/expr.zig");
 const prec = @import("prec.zig");
 const h = @import("helper.zig");
 
