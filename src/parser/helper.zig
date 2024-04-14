@@ -41,7 +41,7 @@ pub fn reportErrors(psr: *Parser, bp: prec.bindingPower) void {
                 e.tokens.line,
                 e.tokens.pos - 1,
                 e.msg,
-                "PARSER LOOKUP ERROR",
+                "PARSER ERROR",
                 token.scanner.filename,
             ) catch {
                 std.debug.panic("Failed to report error", .{});
@@ -60,36 +60,26 @@ pub fn current(psr: *Parser) token.Token {
 }
 
 pub fn advance(psr: *Parser) token.Token {
-    psr.idx += 1;
+    if (psr.idx + 1 < psr.tks.items.len) {
+        psr.idx += 1;
+        return current(psr);
+    }
     return current(psr);
 }
 
-pub fn expect(psr: *Parser, tk: token.TokenType) token.Token {
-    var c_tok = current(psr);
-    std.debug.print("Expected token: {any} Got: {any}", .{ tk, c_tok.type });
-    if (c_tok.type != tk) {
-        pushError(psr, "Expected token");
-    }
-
-    std.debug.print("Token: {any}\n", .{advance(psr).type});
+pub fn expect(psr: *Parser, comptime tk: token.TokenType) token.Token {
+    var msg = "Expected token of type " ++ @tagName(tk);
+    if (current(psr).type != tk) pushError(psr, msg);
     return advance(psr);
 }
 
 pub fn parseExpr(alloc: std.mem.Allocator, parser: *Parser, bp: prec.bindingPower) !*ast.Expr {
-    var c_tok = current(parser);
-    var left = try prec.nudHandler(alloc, parser, c_tok);
+    var left = try prec.nudHandler(alloc, parser, current(parser));
 
-    reportErrors(parser, bp);
-
-    if (parser.idx + 1 < parser.tks.items.len) {
-        c_tok = advance(parser);
-    } else {
-        return left;
-    }
+    var c_tok = advance(parser);
 
     while (@intFromEnum(prec.getBP(parser, c_tok)) > @intFromEnum(bp)) {
         left = try prec.ledHandler(alloc, parser, left);
-        reportErrors(parser, bp);
         c_tok = current(parser);
     }
 

@@ -45,7 +45,7 @@ pub fn ident(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!*
 pub fn unary(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!*ast.Expr {
     var op = psr.current(parser);
     _ = psr.advance(parser);
-    var right = try psr.parseExpr(alloc, parser, prec.getUnary(parser, op));
+    var right = try psr.parseExpr(alloc, parser, prec.getBP(parser, op));
 
     const expr = try alloc.create(ast.Expr);
     expr.* = .{ .Unary = .{ .op = op.value, .right = right } };
@@ -79,6 +79,8 @@ pub fn binary(
     alloc: std.mem.Allocator,
 ) error{OutOfMemory}!*ast.Expr {
     var right = try psr.parseExpr(alloc, parser, bp);
+
+    std.debug.print("op: {s}\n", .{op});
 
     const expr = try alloc.create(ast.Expr);
     expr.* = .{ .Binary = .{ .op = op, .left = left, .right = right } };

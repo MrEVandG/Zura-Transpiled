@@ -41,17 +41,6 @@ pub var bp_table = blk: {
     break :blk map;
 };
 
-/// The prefix_table is a table of prefix operators. Example "!" or "-".
-pub var prefix_table = blk: {
-    var map = std.EnumMap(token.TokenType, prec.bindingPower){};
-
-    // Prefix operators
-    map.put(token.TokenType.not, .prefix);
-    map.put(token.TokenType.minus, .prefix);
-
-    break :blk map;
-};
-
 /// The nud table is called at the start of parsing when we just have
 /// a token that has no left hand side. This is used to parse literals
 /// and prefix operators. This map specifically maps token types to
