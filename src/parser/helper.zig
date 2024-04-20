@@ -76,11 +76,10 @@ pub fn expect(psr: *Parser, comptime tk: token.TokenType) token.Token {
 pub fn parseExpr(alloc: std.mem.Allocator, parser: *Parser, bp: prec.bindingPower) !*ast.Expr {
     var left = try prec.nudHandler(alloc, parser, current(parser));
 
-    var c_tok = advance(parser);
-
-    while (@intFromEnum(prec.getBP(parser, c_tok)) > @intFromEnum(bp)) {
+    while (@intFromEnum(prec.getBP(parser, current(parser))) > @intFromEnum(bp)) {
         left = try prec.ledHandler(alloc, parser, left);
-        c_tok = current(parser);
+        // c_tok = current(parser);
+        _ = advance(parser);
     }
 
     return left;
