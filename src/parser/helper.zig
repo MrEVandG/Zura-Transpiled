@@ -28,6 +28,13 @@ pub const Parser = struct {
     }
 };
 
+pub fn createError(psr: *Parser, alloc: std.mem.Allocator, msg: []const u8) !*ast.Expr {
+    const expr = try alloc.create(ast.Expr);
+    expr.* = .{ .Error = msg };
+    pushError(psr, msg);
+    return expr;
+}
+
 pub fn pushError(psr: *Parser, msg: []const u8) void {
     psr.errors.append(Parser.Error{ .msg = msg, .tokens = current(psr) }) catch {
         std.debug.panic("Failed to push error to the error array", .{});
@@ -70,15 +77,19 @@ pub fn advance(psr: *Parser) token.Token {
 pub fn expect(psr: *Parser, comptime tk: token.TokenType) token.Token {
     var msg = "Expected token of type " ++ @tagName(tk);
     if (current(psr).type != tk) pushError(psr, msg);
+    if (advance(psr).value.len == 0) return current(psr);
     return advance(psr);
 }
 
-pub fn parseExpr(alloc: std.mem.Allocator, parser: *Parser, bp: prec.bindingPower) !*ast.Expr {
+pub fn parseExpr(
+    alloc: std.mem.Allocator,
+    parser: *Parser,
+    bp: prec.bindingPower,
+) !*ast.Expr {
     var left = try prec.nudHandler(alloc, parser, current(parser));
 
     while (@intFromEnum(prec.getBP(parser, current(parser))) > @intFromEnum(bp)) {
         left = try prec.ledHandler(alloc, parser, left);
-        // c_tok = current(parser);
         _ = advance(parser);
     }
 

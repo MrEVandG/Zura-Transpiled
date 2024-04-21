@@ -44,26 +44,13 @@ pub fn ident(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!*
     return expr;
 }
 
-// TODO: There is a small bug here, if we have any unary expr anything after that will
-// TODO: Done
-// not be parsed correctly.
 pub fn unary(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!*ast.Expr {
     var op = psr.current(parser);
     _ = psr.advance(parser);
 
-    var right = try psr.parseExpr(alloc, parser, prec.bindingPower.prefix);
+    var right = try psr.parseExpr(alloc, parser, .prefix);
     const expr = try alloc.create(ast.Expr);
     expr.* = .{ .Unary = .{ .op = op.value, .right = right } };
-    return expr;
-}
-
-// TODO: Finish adding in support for Grouping
-pub fn group(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!*ast.Expr {
-    _ = parser;
-    var body: *ast.Expr = undefined;
-
-    const expr = try alloc.create(ast.Expr);
-    expr.* = .{ .Group = .{ .body = body } };
     return expr;
 }
 

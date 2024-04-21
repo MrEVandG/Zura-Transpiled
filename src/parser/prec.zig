@@ -48,12 +48,9 @@ pub fn getBP(parser: *psr.Parser, tk: token.Token) bindingPower {
 /// expression. If the token is not found in the lookup table, it will return an error.
 /// An example of this is when you have a unary operator like "-" in the expression "-1".
 pub fn nudHandler(alloc: std.mem.Allocator, parser: *psr.Parser, tk: token.Token) !*ast.Expr {
-    return lu.nud_table.get(tk.type).?(parser, alloc) catch {
-        psr.pushError(parser, "Current Token not find in nud table!");
-        const _expr = try alloc.create(ast.Expr);
-        _expr.* = .{ .Error = "Current Token not find in nud table!" };
-        return _expr;
-    };
+    if (lu.nud_table.get(tk.type) == null)
+        return psr.createError(parser, alloc, "Current Token not find in nud table!");
+    return lu.nud_table.get(tk.type).?(parser, alloc);
 }
 
 /// When writing a Pratt parser you will run into this term called "led" which stands for
@@ -64,14 +61,12 @@ pub fn nudHandler(alloc: std.mem.Allocator, parser: *psr.Parser, tk: token.Token
 pub fn ledHandler(alloc: std.mem.Allocator, parser: *psr.Parser, left: *ast.Expr) !*ast.Expr {
     var op = psr.current(parser);
 
+    if (lu.led_table.get(op.type) == null)
+        return psr.createError(parser, alloc, "Current Token not find in led table!");
+
     var bp = getBP(parser, op);
 
     _ = psr.advance(parser);
 
-    return lu.led_table.get(op.type).?(parser, left, op.value, bp, alloc) catch {
-        psr.pushError(parser, "Current Token not find in led table!");
-        const _expr = try alloc.create(ast.Expr);
-        _expr.* = .{ .Error = "Current Token not find in led table!" };
-        return _expr;
-    };
+    return lu.led_table.get(op.type).?(parser, left, op.value, bp, alloc);
 }

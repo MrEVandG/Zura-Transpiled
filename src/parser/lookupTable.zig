@@ -57,9 +57,6 @@ pub var nud_table = blk: {
     map.put(token.TokenType.String, expr.string);
     map.put(token.TokenType.Ident, expr.ident);
 
-    // Parentheses
-    map.put(token.TokenType.lParen, expr.group);
-
     // Prefix operators
     map.put(token.TokenType.minus, expr.unary);
     map.put(token.TokenType.not, expr.unary);

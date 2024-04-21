@@ -4,7 +4,7 @@ const expr = @import("expr.zig");
 
 pub const Stmt = union(enum) {
     Block: struct {
-        stmts: []*Stmt,
+        stmts: std.ArrayList(*Stmt),
     },
     exprStmt: struct {
         expr: *expr.Expr,
@@ -25,6 +25,9 @@ pub const Stmt = union(enum) {
         _ = options;
         _ = fmt;
         _ = self;
+    }
+    pub fn initBlock(self: *Stmt, alloc: std.mem.Allocator) void {
+        self.* = .Block{ .stmts = std.ArrayList(Stmt).init(alloc) };
     }
     pub fn deinit(self: *const Stmt, alloc: std.mem.Allocator) void {
         switch (self.*) {}
