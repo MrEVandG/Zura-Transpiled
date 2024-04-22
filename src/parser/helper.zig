@@ -2,6 +2,7 @@ const std = @import("std");
 const token = @import("../lexer/tokens.zig");
 const err = @import("../helper/error.zig");
 const ast = @import("../ast/expr.zig");
+const stmt = @import("../ast/stmt.zig");
 const prec = @import("prec.zig");
 
 pub const Parser = struct {
@@ -94,4 +95,15 @@ pub fn parseExpr(
     }
 
     return left;
+}
+
+pub fn parseStmt(
+    alloc: std.mem.Allocator,
+    parser: *Parser,
+) !*stmt.Stmt {
+    _ = parser;
+    _ = alloc;
+    // Check the stmt map for the current token keyword
+    // If it exists, call the handler function
+    // If it doesn't, return an expr statement
 }
