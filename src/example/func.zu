@@ -1,11 +1,31 @@
 # Make a function that adds to numbers together
 fn fib(n: i32) -> i32 {
-    if(n <= 1) ret n;
+    if(n <= 1) { ret n; }
     ret fib(n - 1) + fib(n - 2);
 }
 
 fn main() -> !void {
     auto fib = fib(10);
-    info("fib(10) = %d", .{fib}); ~
+    info("fib(10) = %d", .{fib});
     ret 0
+}
+
+const Person = struct {
+   name: str,
+   age: i8,
+
+   pub fn print(self: Person) -> void {
+    info("name: %s, age: %d", .{self.name, self.age});
+   }
+};
+
+fn main() -> !int {
+  var p: Person = null;
+
+  p.name = "John";
+  p.age = 30;
+
+  p.print();
+
+  ret 0;
 }

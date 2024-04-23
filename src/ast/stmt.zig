@@ -11,19 +11,15 @@ pub const Stmt = union(enum) {
         }
     };
 
-    pub const ExprStmt = struct {
+    block: Block,
+    exprStmt: struct {
         expr: *expr.Expr,
-    };
-
-    pub const VarDecl = struct {
+    },
+    varDecl: struct {
         name: []const u8,
         type: []const u8,
         value: *Stmt,
-    };
-
-    block: Block,
-    exprStmt: ExprStmt,
-    varDecl: VarDecl,
+    },
 
     pub fn format(
         self: Stmt,

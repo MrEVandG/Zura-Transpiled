@@ -1,5 +1,6 @@
 fn main() -> !void {
   auto x := [*]i8{1, 2, 4, 5}; // dynamic array because the size is not known at compile time 
+  have x: i8[*] = {};
 
   x <- 0; // this pops the zero index off of the array [2, 4, 5]
   info "%a", .{x}; // prints [2, 4, 5]

@@ -1,10 +1,14 @@
 const std = @import("std");
 
 const token = @import("../lexer/tokens.zig");
-const ast = @import("../ast/expr.zig");
+
+const expr = @import("../ast/expr.zig");
+const stmt = @import("../ast/stmt.zig");
+
 const psr = @import("helper.zig");
 const prec = @import("prec.zig");
-const expr = @import("expr.zig");
+const _expr = @import("expr.zig");
+const _stmt = @import("stmt.zig");
 
 /// The bp_table is a table of binding powers for each token type.
 /// This is used in parse expr to determine the precedence of the current token.
@@ -48,18 +52,18 @@ pub var bp_table = blk: {
 pub var nud_table = blk: {
     var map = std.EnumMap(
         token.TokenType,
-        *const fn (*psr.Parser, std.mem.Allocator) error{OutOfMemory}!*ast.Expr,
+        *const fn (*psr.Parser, std.mem.Allocator) error{OutOfMemory}!*expr.Expr,
     ){};
 
     // Literals
-    map.put(token.TokenType.Num, expr.num);
-    map.put(token.TokenType.Float, expr.float);
-    map.put(token.TokenType.String, expr.string);
-    map.put(token.TokenType.Ident, expr.ident);
+    map.put(token.TokenType.Num, _expr.num);
+    map.put(token.TokenType.Float, _expr.float);
+    map.put(token.TokenType.String, _expr.string);
+    map.put(token.TokenType.Ident, _expr.ident);
 
     // Prefix operators
-    map.put(token.TokenType.minus, expr.unary);
-    map.put(token.TokenType.not, expr.unary);
+    map.put(token.TokenType.minus, _expr.unary);
+    map.put(token.TokenType.not, _expr.unary);
 
     break :blk map;
 };
@@ -72,23 +76,40 @@ pub var nud_table = blk: {
 pub var led_table = blk: {
     var map = std.EnumMap(
         token.TokenType,
-        *const fn (*psr.Parser, *ast.Expr, []const u8, prec.bindingPower, std.mem.Allocator) error{OutOfMemory}!*ast.Expr,
+        *const fn (
+            *psr.Parser,
+            *expr.Expr,
+            []const u8,
+            prec.bindingPower,
+            std.mem.Allocator,
+        ) error{OutOfMemory}!*expr.Expr,
     ){};
 
     // Binary operators
-    map.put(token.TokenType.plus, expr.binary);
-    map.put(token.TokenType.minus, expr.binary);
-    map.put(token.TokenType.star, expr.binary);
-    map.put(token.TokenType.slash, expr.binary);
-    map.put(token.TokenType.caret, expr.binary);
+    map.put(token.TokenType.plus, _expr.binary);
+    map.put(token.TokenType.minus, _expr.binary);
+    map.put(token.TokenType.star, _expr.binary);
+    map.put(token.TokenType.slash, _expr.binary);
+    map.put(token.TokenType.caret, _expr.binary);
 
     // Comparison
-    map.put(token.TokenType.lt, expr.binary);
-    map.put(token.TokenType.gt, expr.binary);
-    map.put(token.TokenType.eEqual, expr.binary);
-    map.put(token.TokenType.nEqual, expr.binary);
-    map.put(token.TokenType.ltEqual, expr.binary);
-    map.put(token.TokenType.gtEqual, expr.binary);
+    map.put(token.TokenType.lt, _expr.binary);
+    map.put(token.TokenType.gt, _expr.binary);
+    map.put(token.TokenType.eEqual, _expr.binary);
+    map.put(token.TokenType.nEqual, _expr.binary);
+    map.put(token.TokenType.ltEqual, _expr.binary);
+    map.put(token.TokenType.gtEqual, _expr.binary);
+
+    break :blk map;
+};
+
+pub var stmt_table = blk: {
+    var map = std.EnumMap(token.TokenType, *const fn (
+        *psr.Parser,
+        std.mem.Allocator,
+    ) error{OutOfMemory}!*stmt.Stmt){};
+
+    map.put(token.TokenType.Have, _stmt.var_decl);
 
     break :blk map;
 };

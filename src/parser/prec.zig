@@ -3,9 +3,11 @@ const std = @import("std");
 const token = @import("../lexer/tokens.zig");
 const err = @import("../helper/error.zig");
 const lu = @import("lookupTable.zig");
-const ast = @import("../ast/expr.zig");
+
+const expr = @import("../ast/expr.zig");
+const stmt = @import("../ast/stmt.zig");
+
 const psr = @import("helper.zig");
-const expr = @import("expr.zig");
 
 /// The Zura bp table (binding power table) is based off of C's prec table
 /// but in reverse. The higher the number, the higher the precedence.
@@ -47,7 +49,7 @@ pub fn getBP(parser: *psr.Parser, tk: token.Token) bindingPower {
 /// in the expression. This function is responsible for parsing the token and returning an
 /// expression. If the token is not found in the lookup table, it will return an error.
 /// An example of this is when you have a unary operator like "-" in the expression "-1".
-pub fn nudHandler(alloc: std.mem.Allocator, parser: *psr.Parser, tk: token.Token) !*ast.Expr {
+pub fn nudHandler(alloc: std.mem.Allocator, parser: *psr.Parser, tk: token.Token) !*expr.Expr {
     if (lu.nud_table.get(tk.type) == null)
         return psr.createError(parser, alloc, "Current Token not find in nud table!");
     return lu.nud_table.get(tk.type).?(parser, alloc);
@@ -58,7 +60,7 @@ pub fn nudHandler(alloc: std.mem.Allocator, parser: *psr.Parser, tk: token.Token
 /// in the expression. This function is responsible for parsing the token and returning an
 /// expression. If the token is not found in the lookup table, it will return an error.
 /// An example of this is when you have a binary operator like "+" in the expression "1 + 1".
-pub fn ledHandler(alloc: std.mem.Allocator, parser: *psr.Parser, left: *ast.Expr) !*ast.Expr {
+pub fn ledHandler(alloc: std.mem.Allocator, parser: *psr.Parser, left: *expr.Expr) !*expr.Expr {
     var op = psr.current(parser);
 
     if (lu.led_table.get(op.type) == null)
@@ -69,4 +71,11 @@ pub fn ledHandler(alloc: std.mem.Allocator, parser: *psr.Parser, left: *ast.Expr
     _ = psr.advance(parser);
 
     return lu.led_table.get(op.type).?(parser, left, op.value, bp, alloc);
+}
+
+/// This is the handler for the "stmt" lookup table.
+pub fn stmtHandler(alloc: std.mem.Allocator, parser: *psr.Parser) !*stmt.Stmt {
+    if (lu.stmt_table.get(psr.current(parser).type) == null)
+        return psr.createError(parser, alloc, "Current Token not find in stmt table!");
+    return lu.stmt_table.get(psr.current(parser).type).?(parser, alloc);
 }

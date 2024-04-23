@@ -101,9 +101,11 @@ pub fn parseStmt(
     alloc: std.mem.Allocator,
     parser: *Parser,
 ) !*stmt.Stmt {
-    _ = parser;
-    _ = alloc;
-    // Check the stmt map for the current token keyword
-    // If it exists, call the handler function
-    // If it doesn't, return an expr statement
+    var state = try prec.stmtHandler(alloc, parser, current(parser));
+
+    if (state == null) {
+        // we know that we are an expression statement
+    }
+
+    return state;
 }
