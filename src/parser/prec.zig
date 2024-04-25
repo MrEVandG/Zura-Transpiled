@@ -75,7 +75,18 @@ pub fn ledHandler(alloc: std.mem.Allocator, parser: *psr.Parser, left: *expr.Exp
 
 /// This is the handler for the "stmt" lookup table.
 pub fn stmtHandler(alloc: std.mem.Allocator, parser: *psr.Parser) !*stmt.Stmt {
-    if (lu.stmt_table.get(psr.current(parser).type) == null)
-        return psr.createError(parser, alloc, "Current Token not find in stmt table!");
+    if (lu.stmt_table.get(psr.current(parser).type) == null) {
+        // then we know that it is an expression statement
+        std.debug.print("Expr Stmt\n", .{});
+        std.debug.print("Current Token: {s}\n", .{psr.current(parser).value});
+        var exprStmt = try psr.parseExpr(alloc, parser, bindingPower.default);
+        std.debug.print("Expr Stmt: {s}\n", .{exprStmt});
+        _ = psr.advance(parser);
+        _ = psr.expect(parser, token.TokenType.semicolon);
+        var _expr = try alloc.create(stmt.Stmt);
+        _expr.* = .{ .ExprStmt = .{ .expr = exprStmt } };
+        return _expr;
+    }
+
     return lu.stmt_table.get(psr.current(parser).type).?(parser, alloc);
 }

@@ -94,6 +94,7 @@ pub fn parseExpr(
         _ = advance(parser);
     }
 
+    std.debug.print("Expression parsed\n", .{});
     return left;
 }
 
@@ -101,11 +102,9 @@ pub fn parseStmt(
     alloc: std.mem.Allocator,
     parser: *Parser,
 ) !*stmt.Stmt {
-    var state = try prec.stmtHandler(alloc, parser, current(parser));
-
-    if (state == null) {
-        // we know that we are an expression statement
-    }
-
-    return state;
+    std.debug.print("Parsing statement\n", .{});
+    var _stmt = try prec.stmtHandler(alloc, parser);
+    std.debug.print("Statement parsed\n", .{});
+    std.debug.print("Statement: {s}\n", .{_stmt});
+    return _stmt;
 }

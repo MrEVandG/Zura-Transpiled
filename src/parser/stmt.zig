@@ -1,18 +1,14 @@
 const std = @import("std");
 
-const parser = @import("helper.zig");
+const token = @import("../lexer/tokens.zig");
+const psr = @import("helper.zig");
 const stmt = @import("../ast/stmt.zig");
 const prec = @import("prec.zig");
 
-pub fn var_decl(psr: *parser.Parser, alloc: std.mem.Allocator) !*stmt.Stmt {
-    _ = alloc;
-    _ = psr;
-}
+pub fn var_decl(parser: *psr.Parser, alloc: std.mem.Allocator) !*stmt.Stmt {
+    _ = parser;
 
-pub fn expr_stmt(psr: *parser.Parser, alloc: std.mem.Allocator) !*stmt.Stmt {
-    var expr = try parser.parseExpr(alloc, psr, prec.bindingPower.default);
-
-    const res = alloc.create(stmt.Stmt);
-    res.* = .{ .exprStmt = .{ .expr = expr } };
-    return res;
+    var new_stmt_ptr = try alloc.create(stmt.Stmt);
+    new_stmt_ptr.* = .{ .VarDecl = .{ .name = "", .type = "" } };
+    return new_stmt_ptr;
 }

@@ -27,11 +27,11 @@ pub fn parse(alloc: std.mem.Allocator) !*stmt.Stmt {
 
     var block_data = stmt.Stmt.Block{};
     errdefer block_data.deinit(alloc);
-    { // New machinicall scope and represents the lifetime of body
-        var body = try h.parseStmt(alloc, &parser);
-        errdefer body.deinit(alloc); // deinit if we return an error
-        try block_data.items.append(alloc, body);
-    }
+    // { // New machinicall scope and represents the lifetime of body
+    var body = try h.parseStmt(alloc, &parser);
+    //     errdefer body.deinit(alloc); // deinit if we return an error
+    try block_data.items.append(alloc, body);
+    // }
 
     const _stmt = try alloc.create(stmt.Stmt);
     _stmt.* = .{ .block = block_data };
