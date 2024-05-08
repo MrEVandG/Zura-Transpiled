@@ -61,12 +61,12 @@ pub fn nudHandler(alloc: std.mem.Allocator, parser: *psr.Parser, tk: token.Token
 /// expression. If the token is not found in the lookup table, it will return an error.
 /// An example of this is when you have a binary operator like "+" in the expression "1 + 1".
 pub fn ledHandler(alloc: std.mem.Allocator, parser: *psr.Parser, left: *expr.Expr) !*expr.Expr {
-    var op = psr.current(parser);
+    const op = psr.current(parser);
 
     if (lu.led_table.get(op.type) == null)
         return psr.createError(parser, alloc, "Current Token not find in led table!");
 
-    var bp = getBP(parser, op);
+    const bp = getBP(parser, op);
 
     _ = psr.advance(parser);
 
@@ -76,16 +76,8 @@ pub fn ledHandler(alloc: std.mem.Allocator, parser: *psr.Parser, left: *expr.Exp
 /// This is the handler for the "stmt" lookup table.
 pub fn stmtHandler(alloc: std.mem.Allocator, parser: *psr.Parser) !*stmt.Stmt {
     if (lu.stmt_table.get(psr.current(parser).type) == null) {
-        // then we know that it is an expression statement
-        std.debug.print("Expr Stmt\n", .{});
-        std.debug.print("Current Token: {s}\n", .{psr.current(parser).value});
-        var exprStmt = try psr.parseExpr(alloc, parser, bindingPower.default);
-        std.debug.print("Expr Stmt: {s}\n", .{exprStmt});
-        _ = psr.advance(parser);
-        _ = psr.expect(parser, token.TokenType.semicolon);
-        var _expr = try alloc.create(stmt.Stmt);
-        _expr.* = .{ .ExprStmt = .{ .expr = exprStmt } };
-        return _expr;
+        std.debug.panic("Current token not found in STMT lookup!", .{});
+        std.process.exit(1);
     }
 
     return lu.stmt_table.get(psr.current(parser).type).?(parser, alloc);

@@ -87,7 +87,7 @@ pub fn scanToken() !Token {
         if (c == '"') return string();
 
         if (peek(0)) |c2| {
-            var dChar = [2]u8{ c, c2 };
+            const dChar = [2]u8{ c, c2 };
             if (dCharLookUp(dChar)) |it| {
                 _ = advance();
                 return try makeToken(it);

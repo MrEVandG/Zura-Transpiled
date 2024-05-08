@@ -32,7 +32,7 @@ fn getValue(start: []const u8, end: []const u8) ![]const u8 {
     if (start.len == 0 and end.len == 0)
         return "EOF";
 
-    var length = @intFromPtr(end.ptr) - @intFromPtr(start.ptr);
+    const length = @intFromPtr(end.ptr) - @intFromPtr(start.ptr);
 
     if (start[0] == '\n')
         return start[1..length];

@@ -17,6 +17,7 @@ pub const Stmt = union(enum) {
     VarDecl: struct {
         name: []const u8,
         type: []const u8,
+        expr: *expr.Expr,
     },
 
     pub fn format(
@@ -32,6 +33,9 @@ pub const Stmt = union(enum) {
                 for (v.items.items) |s| {
                     try writer.print("{any}", .{s});
                 }
+            },
+            .VarDecl => |v| {
+                try writer.print("var {s}: {s} = {any};", .{ v.name, v.type, v.expr });
             },
             else => {},
         }

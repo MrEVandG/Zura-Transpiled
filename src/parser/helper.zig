@@ -58,7 +58,7 @@ pub fn reportErrors(psr: *Parser, bp: prec.bindingPower) void {
 
         if (psr.errors.items.len >= 5) {
             std.debug.print("Too many errors!\n", .{});
-            std.os.exit(1);
+            std.process.exit(1);
         }
     }
 }
@@ -76,7 +76,7 @@ pub fn advance(psr: *Parser) token.Token {
 }
 
 pub fn expect(psr: *Parser, comptime tk: token.TokenType) token.Token {
-    var msg = "Expected token of type " ++ @tagName(tk);
+    const msg = "Expected token of type " ++ @tagName(tk);
     if (current(psr).type != tk) pushError(psr, msg);
     if (advance(psr).value.len == 0) return current(psr);
     return advance(psr);
@@ -94,7 +94,6 @@ pub fn parseExpr(
         _ = advance(parser);
     }
 
-    std.debug.print("Expression parsed\n", .{});
     return left;
 }
 
@@ -103,8 +102,9 @@ pub fn parseStmt(
     parser: *Parser,
 ) !*stmt.Stmt {
     std.debug.print("Parsing statement\n", .{});
-    var _stmt = try prec.stmtHandler(alloc, parser);
+    const _stmt = try prec.stmtHandler(alloc, parser);
+    reportErrors(parser, prec.bindingPower.err);
     std.debug.print("Statement parsed\n", .{});
-    std.debug.print("Statement: {s}\n", .{_stmt});
+    std.debug.print("Statement: {any}\n", .{_stmt});
     return _stmt;
 }

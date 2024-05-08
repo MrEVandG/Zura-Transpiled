@@ -41,14 +41,14 @@ fn printLine(start: []const u8, line: usize) void {
 
 fn lineBefore(line: usize) !void {
     if (line > 0) {
-        var start = try lineStart(line, token.scanner.source);
+        const start = try lineStart(line, token.scanner.source);
         printLine(start, line);
     }
 }
 
 fn currentLine(line: usize, pos: usize) !void {
     comptime var cham = Chameleon.init(.Auto);
-    var start = try lineStart(line, token.scanner.source);
+    const start = try lineStart(line, token.scanner.source);
     printLine(start, line);
 
     // show where the error is!
@@ -64,7 +64,7 @@ fn currentLine(line: usize, pos: usize) !void {
 }
 
 fn lineAfter(line: usize) !void {
-    var start = try lineStart(line, token.scanner.source);
+    const start = try lineStart(line, token.scanner.source);
     printLine(start, line);
 }
 

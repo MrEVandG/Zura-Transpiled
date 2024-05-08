@@ -5,8 +5,8 @@ const parser = @import("parser/parser.zig");
 const std = @import("std");
 
 fn getFileContents(allocator: std.mem.Allocator, file: std.fs.File) ![]const u8 {
-    var buffer: usize = 1024;
-    var result = try file.readToEndAlloc(allocator, buffer);
+    const buffer: usize = 1024;
+    const result = try file.readToEndAlloc(allocator, buffer);
     // TODO: If the buffer is too small, double the size and try again
     return result;
 }
@@ -15,7 +15,7 @@ fn run(allocator: std.mem.Allocator, cmd: []const []const u8) !void {
     // Opening, reading, and lexing the file
     var file = try std.fs.cwd().openFile(cmd[2], .{});
     defer file.close();
-    var input: []const u8 = try getFileContents(allocator, file);
+    const input: []const u8 = try getFileContents(allocator, file);
     defer allocator.free(input);
 
     tokens.scanner.filename = cmd[2];
