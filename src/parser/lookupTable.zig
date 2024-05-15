@@ -8,7 +8,6 @@ const stmt = @import("../ast/stmt.zig");
 const psr = @import("helper.zig");
 const prec = @import("prec.zig");
 const _expr = @import("expr.zig");
-const _stmt = @import("stmt.zig");
 
 /// The bp_table is a table of binding powers for each token type.
 /// This is used in parse expr to determine the precedence of the current token.
@@ -99,17 +98,6 @@ pub var led_table = blk: {
     map.put(token.TokenType.nEqual, _expr.binary);
     map.put(token.TokenType.ltEqual, _expr.binary);
     map.put(token.TokenType.gtEqual, _expr.binary);
-
-    break :blk map;
-};
-
-pub var stmt_table = blk: {
-    var map = std.EnumMap(token.TokenType, *const fn (
-        *psr.Parser,
-        std.mem.Allocator,
-    ) error{OutOfMemory}!*stmt.Stmt){};
-
-    map.put(token.TokenType.Have, _stmt.var_decl);
 
     break :blk map;
 };

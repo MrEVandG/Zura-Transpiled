@@ -23,10 +23,7 @@ fn run(allocator: std.mem.Allocator, cmd: []const []const u8) !void {
     initScanner(input);
 
     // Parsing the file
-    var pars = try parser.parse(allocator);
-    defer pars.deinit(allocator);
-
-    std.debug.print("{any}", .{pars});
+    try parser.parse(allocator);
 
     std.debug.print("\n", .{});
 }

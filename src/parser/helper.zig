@@ -2,7 +2,6 @@ const std = @import("std");
 const token = @import("../lexer/tokens.zig");
 const err = @import("../helper/error.zig");
 const ast = @import("../ast/expr.zig");
-const stmt = @import("../ast/stmt.zig");
 const prec = @import("prec.zig");
 
 pub const Parser = struct {
@@ -29,13 +28,6 @@ pub const Parser = struct {
     }
 };
 
-pub fn createError(psr: *Parser, alloc: std.mem.Allocator, msg: []const u8) !*ast.Expr {
-    const expr = try alloc.create(ast.Expr);
-    expr.* = .{ .Error = msg };
-    pushError(psr, msg);
-    return expr;
-}
-
 pub fn pushError(psr: *Parser, msg: []const u8) void {
     psr.errors.append(Parser.Error{ .msg = msg, .tokens = current(psr) }) catch {
         std.debug.panic("Failed to push error to the error array", .{});
@@ -58,7 +50,7 @@ pub fn reportErrors(psr: *Parser, bp: prec.bindingPower) void {
 
         if (psr.errors.items.len >= 5) {
             std.debug.print("Too many errors!\n", .{});
-            std.process.exit(1);
+            std.process.exit(10);
         }
     }
 }
@@ -78,39 +70,16 @@ pub fn advance(psr: *Parser) token.Token {
 pub fn expect(psr: *Parser, comptime tk: token.TokenType) token.Token {
     const msg = "Expected token of type " ++ @tagName(tk);
     if (current(psr).type != tk) pushError(psr, msg);
-    if (advance(psr).value.len == 0) return current(psr);
     return advance(psr);
 }
 
-pub fn parseExpr(
-    alloc: std.mem.Allocator,
-    parser: *Parser,
-    bp: prec.bindingPower,
-) !*ast.Expr {
+pub fn parseExpr(alloc: std.mem.Allocator, parser: *Parser, bp: prec.bindingPower) !*ast.Expr {
     var left = try prec.nudHandler(alloc, parser, current(parser));
 
-    var c_tok = advance(parser);
-
-    while (@intFromEnum(prec.getBP(parser, c_tok)) > @intFromEnum(bp)) {
+    while (@intFromEnum(prec.getBP(parser, current(parser))) > @intFromEnum(bp)) {
         left = try prec.ledHandler(alloc, parser, left);
-<<<<<<< HEAD
         _ = advance(parser);
-=======
-        c_tok = current(parser);
->>>>>>> parent of d96bfbf (Fixed issue with unaries)
     }
 
     return left;
-}
-
-pub fn parseStmt(
-    alloc: std.mem.Allocator,
-    parser: *Parser,
-) !*stmt.Stmt {
-    std.debug.print("Parsing statement\n", .{});
-    const _stmt = try prec.stmtHandler(alloc, parser);
-    reportErrors(parser, prec.bindingPower.err);
-    std.debug.print("Statement parsed\n", .{});
-    std.debug.print("Statement: {any}\n", .{_stmt});
-    return _stmt;
 }

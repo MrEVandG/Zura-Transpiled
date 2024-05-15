@@ -2,7 +2,7 @@ const std = @import("std");
 
 const token = @import("../lexer/tokens.zig");
 const lexer = @import("../lexer/lexer.zig");
-const stmt = @import("../ast/stmt.zig");
+const ast = @import("../ast/expr.zig");
 const prec = @import("prec.zig");
 const h = @import("helper.zig");
 
@@ -19,21 +19,16 @@ fn storeToken(parser: *h.Parser, tk: token.Token) !void {
 
 /// Parse will parse the tokens that are stored in the parser.tks array. This function
 /// in time will return an BlockExpr that will be helpfull for the compiler stage.
-pub fn parse(alloc: std.mem.Allocator) !*stmt.Stmt {
+pub fn parse(alloc: std.mem.Allocator) !void {
     var parser = h.Parser.init(alloc);
     defer parser.deinit();
 
     try storeToken(&parser, token.token);
 
-    // var block_data = stmt.Stmt.Block{};
-    // errdefer block_data.deinit(alloc);
-    // { // New machinicall scope and represents the lifetime of body;
-    const body = try h.parseStmt(alloc, &parser);
-    //     errdefer body.deinit(alloc); // deinit if we return an error
-    // try block_data.items.append(alloc, body);
-    // }
+    var res = try h.parseExpr(alloc, &parser, prec.bindingPower.default);
+    std.debug.print("Result: {}\n", .{res});
+    res.deinit(alloc);
 
-    // const _stmt = try alloc.create(stmt.Stmt);
-    // _stmt.* = .{ .block = block_data };
-    return body;
+    // check for errors
+    h.reportErrors(&parser, prec.bindingPower.default);
 }
