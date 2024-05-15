@@ -89,9 +89,15 @@ pub fn parseExpr(
 ) !*ast.Expr {
     var left = try prec.nudHandler(alloc, parser, current(parser));
 
-    while (@intFromEnum(prec.getBP(parser, current(parser))) > @intFromEnum(bp)) {
+    var c_tok = advance(parser);
+
+    while (@intFromEnum(prec.getBP(parser, c_tok)) > @intFromEnum(bp)) {
         left = try prec.ledHandler(alloc, parser, left);
+<<<<<<< HEAD
         _ = advance(parser);
+=======
+        c_tok = current(parser);
+>>>>>>> parent of d96bfbf (Fixed issue with unaries)
     }
 
     return left;

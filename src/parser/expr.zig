@@ -19,20 +19,17 @@ const tkn = @import("../lexer/tokens.zig");
 pub fn num(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!*ast.Expr {
     const expr = try alloc.create(ast.Expr);
     expr.* = .{ .Number = psr.current(parser).value };
-    _ = psr.advance(parser);
     return expr;
 }
 
 pub fn float(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!*ast.Expr {
     const expr = try alloc.create(ast.Expr);
     expr.* = .{ .Float = psr.current(parser).value };
-    _ = psr.advance(parser);
     return expr;
 }
 
 pub fn string(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!*ast.Expr {
     const expr = try alloc.create(ast.Expr);
-    _ = psr.advance(parser);
     expr.* = .{ .String = psr.current(parser).value };
     return expr;
 }
@@ -40,15 +37,23 @@ pub fn string(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!
 pub fn ident(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!*ast.Expr {
     const expr = try alloc.create(ast.Expr);
     expr.* = .{ .Ident = psr.current(parser).value };
-    _ = psr.advance(parser);
     return expr;
 }
 
+<<<<<<< HEAD
+=======
+// TODO: There is a small bug here, if we have any unary expr anything after that will
+// not be parsed correctly.
+>>>>>>> parent of d96bfbf (Fixed issue with unaries)
 pub fn unary(parser: *psr.Parser, alloc: std.mem.Allocator) error{OutOfMemory}!*ast.Expr {
     const op = psr.current(parser);
     _ = psr.advance(parser);
+    var right = try psr.parseExpr(alloc, parser, prec.getBP(parser, op));
 
+<<<<<<< HEAD
     const right = try psr.parseExpr(alloc, parser, .prefix);
+=======
+>>>>>>> parent of d96bfbf (Fixed issue with unaries)
     const expr = try alloc.create(ast.Expr);
     expr.* = .{ .Unary = .{ .op = op.value, .right = right } };
     return expr;
@@ -71,6 +76,8 @@ pub fn binary(
     alloc: std.mem.Allocator,
 ) error{OutOfMemory}!*ast.Expr {
     const right = try psr.parseExpr(alloc, parser, bp);
+
+    std.debug.print("op: {s}\n", .{op});
 
     const expr = try alloc.create(ast.Expr);
     expr.* = .{ .Binary = .{ .op = op, .left = left, .right = right } };
